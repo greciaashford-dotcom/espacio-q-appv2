@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #E9E4D8;
+  --foreground: #1E1E1E;
+  --card: #F4EFE4;
+  --card-foreground: #1E1E1E;
+  --popover: #F4EFE4;
+  --popover-foreground: #1E1E1E;
+  --primary: #2E2E2E;
+  --primary-foreground: #E6E4D7;
+  --secondary: #D8D2C4;
+  --secondary-foreground: #2E2E2E;
+  --accent: #E6E4D7;
+  --accent-foreground: #2E2E2E;
+  --muted: #CFC8B8;
+  --muted-foreground: #5E5A52;
+  --border: #D2CBBB;
+  --input: #D2CBBB;
+  --ring: #2E2E2E;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --success: #2F5D46;
+  --success-foreground: #F4EFE4;
+  --warning: #925B18;
+  --warning-foreground: #F4EFE4;
+  --chart-1: #F26A4B;
+  --chart-2: #1E1E1E;
+  --chart-3: #5E5A52;
+  --chart-4: #A89F8F;
+  --chart-5: #CFC8B8;
+  --radius: 0.5rem;
+  --sidebar: #F4EFE4;
+  --sidebar-foreground: #1E1E1E;
+  --sidebar-accent: #E6E4D7;
+  --sidebar-border: #D2CBBB;
+}
+
+.dark {
+  --background: #141414;
+  --foreground: #E8E3DA;
+  --card: #1C1C1C;
+  --card-foreground: #E8E3DA;
+  --popover: #1C1C1C;
+  --popover-foreground: #E8E3DA;
+  --primary: #D1CFC0;
+  --primary-foreground: #363636;
+  --secondary: #222222;
+  --secondary-foreground: #E8E3DA;
+  --accent: #363636;
+  --accent-foreground: #E8E3DA;
+  --muted: #2A2A2A;
+  --muted-foreground: #8E8A83;
+  --border: #2C2C2C;
+  --input: #2C2C2C;
+  --ring: #D1CFC0;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --success: #3E7B5C;
+  --success-foreground: #FFFFFF;
+  --warning: #B77422;
+  --warning-foreground: #FFFFFF;
+  --sidebar: #1C1C1C;
+  --sidebar-foreground: #E8E3DA;
+  --sidebar-accent: #363636;
+  --sidebar-border: #2C2C2C;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    overflow-x: clip;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
