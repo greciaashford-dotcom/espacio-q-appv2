@@ -1,0 +1,45 @@
+{
+  "summary": "Phase 3 (/contacto OSM + consent-gated Google Maps + Cómo llegar CMS) tested end-to-end on the preview URL with Playwright, plus Vitest (62/62) and backend regression pytest (17/17). All journeys JRN-41 to JRN-50 passed, as did the edge case, the cookie policy mention and the regressions. No functional bugs found. Only minor a11y/design notes.",
+  "results": {
+    "JRN-41": "PASS - after reject: contact-map-osm data-lat=40.4241269 data-lng=-3.6976262, aria-label 'Mapa de ubicación de ESPACIO Q', 1 marker, attribution '© OpenStreetMap', 18 tiles loaded; 0 requests to google.com/gstatic.com/googleapis.com across first load + 3 reloads (also 0 before any banner choice, and 0 on home).",
+    "JRN-42": "PASS - view-google-btn -> consent notice (0 Google requests so far) -> accept -> iframe contact-map-google, data-map-provider=google, no reload (window marker kept); cookie-opt-maps checked, analytics/marketing unchecked.",
+    "JRN-43": "PASS - reload shows Google embed directly.",
+    "JRN-44": "PASS - uncheck cookie-opt-maps + save -> OSM again without reload, iframe removed; 0 new Google requests over 4 s + reload; cookie g:0.",
+    "JRN-45": "PASS - banner Aceptar and modal Aceptar todas both set maps=true and show the Google embed; cookie-opt-maps is off by default.",
+    "Edge inline-before-banner": "PASS - banner stays visible (also after reload), localStorage {analytics:false, marketing:false, maps:true, partial:true}. Note: clicking banner 'Rechazar' afterwards also sets maps=false (reject all), which is consistent.",
+    "JRN-46": "PASS - contact-directions-btn is <a> href=https://www.google.com/maps/dir/?api=1&destination=ESPACIO%20Q%2C%20Calle%20de%20Pelayo%2041%2C%2028004%20Madrid target=_blank rel=noopener noreferrer, opens a new tab; contact-map-open-google-link points to the /maps/place/Espacio+Q URL.",
+    "JRN-47": "PASS - metro text matches, parking text present, contact-directions-bus absent.",
+    "JRN-48": "PASS - owner login, block listed, 'Cómo llegar (bajo el mapa…)' group with #f-directions-metro/bus/parking; draft not public (but visible with ?preview=1); publish -> public shows edited Metro + Autobús, revision count 0->1, v2. Restored the defaults and published as v3; DB published == draft, hasUnpublished=false, bus=''.",
+    "JRN-49": "PASS - 375 px and 1440 px: scrollWidth == innerWidth (also in Google mode at 375); tiles 256x256 loaded, nothing grey or stretched; Tab order reaches the Leaflet container (focusable), marker, zoom controls, Cómo llegar, Abrir en Google Maps, Ver en Google Maps.",
+    "JRN-50": "PASS - with tile.openstreetmap.org aborted, the contact-map-error overlay appears; address and Cómo llegar stay visible and open the directions in a new tab.",
+    "Cookies page": "PASS - section 2 includes '3. Mapas de terceros (Google Maps) (Desactivada por defecto)' text.",
+    "Regression": "PASS - contact form with test_phase3@example.com -> 200 {ok:true} + success state; banner reject on / and accept on /servicios work; Vitest 62/62; backend tests/test_espacioq_api.py 17/17."
+  },
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/contacto", "issues": [
+        "'Abrir en Google Maps' now appears twice (aside 'Ubicación' card and below the map), so screen readers hear two identical link texts. Consider keeping just one.",
+        "Cómo llegar grid is md:grid-cols-3 but only 2 items show by default (Bus empty), which leaves an empty third column at desktop. Consider adapting the column count to the number of items.",
+        "The section's aria-labelledby='como-llegar-title' points to a heading that is not rendered when all directions are empty (dangling reference)."
+      ]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_espacioq_api.py", "/app/test_reports/pytest/pytest_phase3_regression.xml", "/app/frontend/tests/phase3-location-directions.test.ts"],
+  "action_items": [
+    "Optional: remove the duplicate 'Abrir en Google Maps' link or give the two links distinct accessible names",
+    "Optional: adapt the directions grid columns to the item count; fix the dangling aria-labelledby when the directions block is hidden"
+  ],
+  "critical_code_review_comments": [
+    "contact-map.tsx: the Leaflet popup HTML is built with string interpolation of name/address from salon settings (bindPopup(`<strong>${name}</strong>...`)). This is owner-controlled data, so the risk is low, but escaping it or using a DOM node would be safer.",
+    "cms-editor.tsx has no data-testid attributes (667 lines, close to the 700-line limit). Tests relied on ids such as #f-directions-metro."
+  ],
+  "updated_files": ["/app/test_reports/iteration_4.json"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "One TEST_ contact submission (test_phase3@example.com, simulated, no real email). The CMS page_contacto went from v1 to v2 (TEST_ edits) to v3 (defaults restored). Directions are back at their defaults.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "The Black Friday promo popup intercepts clicks: use add_init_script to set sessionStorage/localStorage 'espacioq_bf25_popup_dismissed_v1'='1'. Consent key espacioq_cookie_consent. CMS field ids follow f-<path>, e.g. #f-directions-metro. Login uses #login-email and input[name=password]. page_contacto is now at v3."
+}

@@ -1,0 +1,28 @@
+{
+  "passed": 15,
+  "failed": 0,
+  "bugs": [],
+  "action_items": [
+    {"type": "blocked", "severity": "medium", "item": "JRN-16 CMS draft/publish not exercised: publishing text to the live home page would modify seeded/user CMS content (fixture discipline). Needs human verification or a tscheck-scoped CMS block."},
+    {"type": "blocked", "severity": "low", "item": "JRN-8 exact DST dates (Mar/Oct 2026) are in the past (server date 2026-11-08) and 2027 equivalents are beyond maxBookingHorizonDays=60; only the winter CET offset (local->UTC) was verified. Human verification of summer/DST transitions needed."},
+    {"type": "note", "severity": "low", "item": "Backend tests authenticate by inserting tscheck-sess-* rows into the session collection for the existing test accounts (no account changed). Residue: tscheck- appointments, clients, contact messages, subscribers, media assets."}
+  ],
+  "retest_needed": true,
+  "checks": [
+    {"criterion": "JRN-1/2 public site + OpenAPI", "name": "test_tscheck_public_openapi.py", "lane": "backend", "status": "passed", "evidence": "GET /api/openapi.json 200 with /api/v1/* paths; /, /servicios, /equipo, /galeria, /contacto, /reservar 200"},
+    {"criterion": "JRN-1/2 public site + OpenAPI", "name": "public-pages-load", "lane": "browser", "status": "passed", "evidence": "All pages + a service detail render 200 without error screen (known hydration warnings #418/#423/#425 only)"},
+    {"criterion": "JRN-4/5/25 auth and roles", "name": "test_tscheck_auth_roles.py", "lane": "backend", "status": "passed", "evidence": "GET /api/v1/admin/clients/export no cookie 401/403; owner 200 xlsx (PK); reception 401/403"},
+    {"criterion": "JRN-4/5/25 auth and roles", "name": "auth-roles-login-logout", "lane": "browser", "status": "passed", "evidence": "/acceso shows login only; owner -> /admin; Salir -> /acceso, /admin redirects, export 401/403; reception: no Configuración link, page shows 'no tiene permisos', agenda accessible"},
+    {"criterion": "JRN-6/7/8 booking + availability", "name": "test_tscheck_availability.py", "lane": "backend", "status": "passed", "evidence": "Sun/Mon no slots; Tue-Fri within 10:30-21:00, Sat 09:00-16:00; startAtUtc matches Europe/Madrid conversion; booked slot removed from availability"},
+    {"criterion": "JRN-6/7/8 booking + availability", "name": "booking-ui-shows-in-agenda", "lane": "browser", "status": "passed", "evidence": "Via preview ingress URL: wizard -> 'Cita confirmada' + EQ- reference; owner /admin/agenda shows the tscheck customer"},
+    {"criterion": "JRN-9/10/11 anti-double-booking", "name": "test_tscheck_double_booking.py", "lane": "backend", "status": "passed", "evidence": "3 runs x 10 concurrent POST /api/v1/bookings: 1x200 + 9x409 with alternatives, 1 active occupancy; +30min overlap 409; same idempotencyKey twice -> same appointment id"},
+    {"criterion": "JRN-12..15 manage link", "name": "test_tscheck_manage.py", "lane": "backend", "status": "passed", "evidence": "reschedule free 200, appointment moved, old slot freed; taken slot 409 'Tu cita original se mantiene intacta', time unchanged; cancel then rebook same slot 200; random token 400/404 without data"},
+    {"criterion": "JRN-12..15 manage link", "name": "manage-link-reschedule-cancel", "lane": "browser", "status": "passed", "evidence": "Manage page: reschedule to taken slot shows exact Spanish message, original slot still occupied; random token shows 'no es válido o ha caducado' with no data"},
+    {"criterion": "JRN-16/17/18 CMS + media", "name": "test_tscheck_media.py", "lane": "backend", "status": "passed", "evidence": "PNG upload 200 and /media/<file> serves image/png; SVG and text-as-.jpg rejected >=400; unauthenticated upload 401/403. CMS draft/publish blocked (see action_items)"},
+    {"criterion": "JRN-16/17/18 CMS + media", "name": "media-upload-validation", "lane": "browser", "status": "passed", "evidence": "/admin/multimedia: PNG listed and loadable; SVG and fake jpg -> 400"},
+    {"criterion": "JRN-19/20/21 newsletter, contact, Excel", "name": "test_tscheck_newsletter_contact_excel.py", "lane": "backend", "status": "passed", "evidence": "subscribe 200 + NEWSLETTER_VERIFY SIMULATED_LOCAL; no consent 400; contact 200 + CONTACT_ACK + contactMessage; invalid email 400 'Introduce un email válido.'; template xlsx, 3-row import with '=1+1' stored as text, marketing off; export valid xlsx"},
+    {"criterion": "JRN-19/20/21 newsletter, contact, Excel", "name": "contact-newsletter-forms", "lane": "browser", "status": "passed", "evidence": "Contact invalid email error, valid submit 200; footer newsletter blocked without consent, confirmation with consent; both emails visible in /admin/automatizaciones as SIMULATED_LOCAL"},
+    {"criterion": "JRN-22/23/24 jobs + seed", "name": "test_tscheck_jobs_seed.py", "lane": "backend", "status": "passed", "evidence": "POST /api/internal/jobs no token 401, Bearer CRON_SECRET 200; reminder 24H/2H jobs at start-24h/start-2h; services/professionals/emailTemplates no duplicates"},
+    {"criterion": "JRN-22/23/24 jobs + seed", "name": "process-queue-button", "lane": "browser", "status": "passed", "evidence": "'Procesar cola pendiente ahora' -> 'Worker ejecutado: ...' summary"}
+  ]
+}

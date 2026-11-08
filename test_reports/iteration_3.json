@@ -1,0 +1,49 @@
+{
+  "summary": "Retested the 8 fixes from iteration_2 plus the Phase 2 regression set. Vitest: 59/59 pass (the existing 52 plus 7 new mocked-fetch tests in tests/phase2-retry-ratelimit-mocked.test.ts). Live pytest: 10/10 pass (backend/tests/test_phase2_retest_iter3.py). Playwright covered the dashboard, the /admin/automatizaciones delivery list and creating an appointment in the panel. Only 2 real Resend sends were used (SALON_NOTICE_CONTACT to delivered+it3notice*@resend.dev, both ACCEPTED with a provider id). Everything else used reserved test domains. All 8 fixes are verified. Two minor issues remain (see action_items).",
+  "verified_fixes": {
+    "1_rate_limit_429": "PASS (mocked fetch). Delivery is FAILED with errorMessage '[rate_limited] ...' and rateLimited=true. The job goes back to PENDING, attempts are unchanged and nextAttemptUtc is now+~11min. The batch stops after the first 429: a second due job was left untouched (attempts 0). While cooling down, a direct send does not call the provider, records FAILED with rateLimited, and gets a retry job about 11 min out.",
+    "2_direct_send_queue_retries": "PASS (mocked fetch). A 503 and a network error each create a RETRY_EMAIL_DELIVERY job (dedupKey retry:<key>, payload replyTo kept). A 422 creates no job. The worker re-dispatches the FAILED delivery: it becomes ACCEPTED with the provider id, the job is COMPLETED and contact_email (Reply-To) is forwarded. The contact route, notices.ts and newsletter verify/welcome all pass retryViaQueue:true.",
+    "3_automations_ui": "PASS. delivery-provider-id is rendered ('ID proveedor: 01a1bca7-...') and delivery-error-message is rendered ('Motivo: No enviado: dominio reservado para pruebas.').",
+    "4_stale_cancelled_appointment": "PASS. Booked then cancelled before the worker ran. Confirmation, CLIENT_WELCOME and reminders ended CANCELLED ('Descartado: la cita está cancelada.'), APPOINTMENT_CANCELLED ended COMPLETED. Only the cancellation email was recorded.",
+    "5_campaign_zero_accepted": "PASS. The campaign is FAILED with sentAtUtc null. The recipient is FAILED and its errorText is MANAGED_MARKETING_BLOCKED_MESSAGE (the real reason).",
+    "6_dashboard_simulated_text": "PASS. Text: '191 correo(s) guardados en buzón local (no enviados: destinatarios de dominios reservados de prueba o anteriores a la activación del proveedor).' 'falta proveedor' is gone.",
+    "7_scheduler": "PASS. schedulerLeases.lastRunAt moved from 19:30:43 to 19:35:43 (exactly 5 min), and the log shows '[scheduler] cola procesada'.",
+    "8_panel_immediate_emails": "PASS. A panel appointment (EQ-4XJZAB) had SALON_NOTICE_BOOKING, CLIENT_WELCOME and APPOINTMENT_CONFIRMATION COMPLETED about 4 ms after createdAt, with no cron run."
+  },
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "lib/jobs/worker.ts (429 branch)", "issue": "A rate-limited job that is put back to PENDING still adds to failedJobs, so scheduler/cron stats report it as a failure."},
+      {"endpoint": "lib/domain/booking.ts + worker CLIENT_WELCOME", "issue": "Edge case: if the client's first appointment is cancelled before the welcome job runs (for example during the 11-min provider cooldown), the welcome job is CANCELLED. Later bookings never re-create it because the 'previous appointments === 0' check fails, so the client never gets a welcome."},
+      {"endpoint": "/api/openapi.json", "issue": "The internal job types are not documented (no RETRY_EMAIL_DELIVERY / rate-limit cooldown mention). Optional."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Dashboard > Integraciones card", "issue": "EMAIL RESEND shows 'Pendiente de configurar' while the checklist marks 'Proveedor de email activo (Resend gestionado por Emergent)' as done. The cause is that integrationConnection {provider:'EMAIL_RESEND'} stays in status PENDING_CREDENTIALS and is never synced with getEmailProviderConfig().configured.", "selector": "app/admin/page.tsx integrations list", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/admin/automatizaciones deliveries", "issues": ["SIMULATED_LOCAL 'Motivo: No enviado: dominio reservado para pruebas.' is shown in destructive red, as if it were an error. A muted colour would fit an informational reason better."]},
+      {"screen": "Dashboard (RECEPTION role)", "issues": ["The missing-notice-email warning has a 'Configurar' link to /admin/configuracion, which RECEPTION cannot access."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_phase2_retest_iter3.py", "/app/frontend/tests/phase2-retry-ratelimit-mocked.test.ts", "/app/test_reports/pytest/pytest_iter3.xml"],
+  "action_items": [
+    "Sync the EMAIL_RESEND integrationConnection status (or the dashboard card) with getEmailProviderConfig().configured, so the card no longer says 'Pendiente de configurar' when managed Resend is active.",
+    "Optional: do not count rate-limit reschedules in failedJobs, and let CLIENT_WELCOME be re-created when the welcome job was cancelled only because the appointment was cancelled.",
+    "Optional: show SIMULATED_LOCAL reasons in a muted colour, and hide the 'Configurar' link from RECEPTION."
+  ],
+  "critical_code_review_comments": [
+    "The provider cooldown is held in process memory (providerCooldownUntil). That is acceptable for a single Next instance, and jobs already rescheduled by +11 min survive a restart.",
+    "SEND_TRANSACTIONAL_EMAIL confirmation jobs are discarded only when the appointment is CANCELLED, not when its version is newer (rescheduled). The email renders current appointment data, so this is acceptable.",
+    "A campaign where every recipient was SUPPRESSED_SKIPPED also ends FAILED. That is debatable but honest.",
+    "agenda-manager.tsx and login-form.tsx still have no data-testid attributes."
+  ],
+  "updated_files": ["/app/backend/tests/test_phase2_retest_iter3.py", "/app/frontend/tests/phase2-retry-ratelimit-mocked.test.ts"],
+  "success_rate": {"backend": "100% (10/10 live pytest, 59/59 vitest)", "frontend": "100% of retested flows (1 low-priority UI inconsistency)"},
+  "seed_data_creation": "None. Test data used TEST_ / example.com recipients. The new vitest file deletes its own records by id/dedupKey. Bookings made by pytest are cancelled in teardown, and panel appointment EQ-4XJZAB was cancelled. salonSettings.noticeEmail and contactEmail were left null (contactEmail was already null at start).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Real Resend sends this run: 2 (SALON_NOTICE_CONTACT). test_phase2_retest_iter3.py sends 1 real email per run (test_contact_notice_real_send_accepted; it xfails gracefully if rate limited). The mocked vitest file sets EMERGENT_EMAIL_KEY in-process and mocks fetch, so it never hits the provider. Booking horizon is about 8-10 weeks, so find_slot uses weeks 4-10. The frontend .env exposes APP_URL rather than REACT_APP_BACKEND_URL. One pre-existing FAILED job (appt-init:c0mw87573..., 4/4 attempts, from before the fix) is still in the queue."
+}

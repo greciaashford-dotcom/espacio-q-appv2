@@ -1,0 +1,5 @@
+jobs:
+  - name: espacioq-process-job-queue
+    schedule: "*/5 * * * *"
+    method: POST
+    endpoint: "{{BASE_URL}}/api/internal/jobs"

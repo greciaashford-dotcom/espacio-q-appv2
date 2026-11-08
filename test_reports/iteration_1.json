@@ -1,0 +1,51 @@
+{
+  "summary": "First full E2E run of ESPACIO Q Phase 1 (Next.js 14 + Mongo, FastAPI proxy). Backend: 23/23 pytest pass (OpenAPI, availability rules, 10-way concurrency, 'any'-pro concurrency = capacity, overlap 409, idempotency replay, manage reschedule/cancel/rebook, concurrent reschedule to same slot -> [200,409], invalid token, closed/past/beyond-horizon rejection, reminder+confirmation jobs, internal jobs auth, admin API guards). Frontend UI tested: public pages JRN-1 (all 200, no broken images), /acceso login-only, owner login -> /admin, logout -> /admin redirects + old cookie invalid, full /reservar wizard -> success screen -> appointment in /admin/agenda -> slot removed, manage page reschedule (UI) + cancel (UI) + slot freed, invalid token page, CMS draft (not public) -> publish (public) -> revision history -> reverted, media upload PNG ok + /media/<file> served (image/png), SVG & fake .jpg rejected with Spanish error, newsletter consent required + PENDING_VERIFICATION + NEWSLETTER_VERIFY SIMULATED_LOCAL outbox, contact invalid/valid + CONTACT_ACK outbox + message in /admin/informes, clients template/dry-run/import (3 rows, '=' cell, marketing off)/export with formula neutralised, RECEPTION denied on /admin/configuracion (+integraciones), agenda usable. All requested journeys pass; issues found are security/UX/minor.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "lib/security/rate-limit.ts getClientIdentifier + lib/auth/actions.ts loginAction", "issue": "Rate-limit identity = FIRST entry of client-controlled X-Forwarded-For. Verified: ingress forwards client XFF unchanged (11 requests with fixed spoofed XFF -> 11th 429; rotating XFF -> 18+ bookings with no 429). Booking/contact/newsletter limits AND the login brute-force limit (ip|email, 8/15min) are fully bypassable by rotating the header.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "loginAction", "issue": "Successful logins count toward the 8/15min login limit; after ~8 legit logins the owner got 'Demasiados intentos' with correct password. Count only failures or reset on success."},
+      {"endpoint": "POST /api/v1/contact, POST /api/v1/newsletter/subscribe", "issue": "Invalid email returns zod default English 'Invalid email' (shown in Spanish UI). Add Spanish messages like the booking schema."},
+      {"endpoint": "POST /api/v1/bookings", "issue": "Nonexistent serviceId returns 409 SLOT_UNAVAILABLE instead of 400/404."},
+      {"endpoint": "GET /api/v1/admin/*", "issue": "No session returns 403 (not 401). Acceptable per JRN-5 but 401 is more correct for unauthenticated."},
+      {"endpoint": "GET /api/v1/admin/clients/export", "issue": "Neutralisation stores a literal leading apostrophe in string cells (\"'+34 600...\", \"'=HYPERLINK...\"), visible in Excel. Consider quotePrefix style instead of literal char for phones."},
+      {"endpoint": "GET /media/<file>", "issue": "Served with Cache-Control: no-store for immutable uniquely-named files (perf only)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Home page (/)", "issue": "React hydration errors #418/#423/#425 (7 pageerrors) only on '/'. Likely client/server divergent render in perspective-tunnel-hero (useReducedMotion / matchMedia branching) or locale/date text. Other public pages clean.", "selector": "components/ui/perspective-tunnel-hero.tsx", "priority": "MEDIUM"},
+      {"component": "Manage page reschedule", "issue": "Same-day slot list hides slots overlapping the appointment's own current window (e.g. 11:00-12:45 when booked 12:00), so moving by 15 min isn't possible although backend supports self-overlap.", "selector": "/reservar/gestion/<token> -> Reprogramar", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "All public pages", "issues": ["Black Friday promo modal pops over every page after a delay incl. /reservar wizard and /reservar/gestion cancel page, blocking clicks until closed", "Cookie banner sometimes persists after clicking Aceptar right after load (pre-hydration click)"]},
+      {"screen": "Booking wizard / manage / admin agenda", "issues": ["Native <input type=date> picker used (not shadcn calendar)", "Admin CMS publish uses native window.confirm()"]},
+      {"screen": "Whole app", "issues": ["No data-testid attributes anywhere (imported repo) - tests rely on ids/text"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_espacioq_api.py", "/app/backend/tests/test_espacioq_edge.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Derive client IP from a trusted hop (rightmost XFF entry added by ingress / x-real-ip) instead of the first XFF entry, in getClientIdentifier and loginAction",
+    "Do not count successful logins toward the login rate limit",
+    "Add Spanish zod messages for contact/newsletter email (and other fields)",
+    "Fix hydration mismatch on home page",
+    "Return 400/404 for unknown serviceId in booking create",
+    "Optional: allow reschedule to slots overlapping own appointment in manage UI; limit promo popup on transactional pages"
+  ],
+  "critical_code_review_comments": [
+    "Rate-limit/IP trust: client-spoofable X-Forwarded-For used as identity (security)",
+    "lib/domain/booking.ts is 1232 lines and lib/db/prisma.ts 725 lines (>700) - split into modules",
+    "Anti-double-booking via per-minute unique slotLocks works under concurrency (10-way single pro, 10-way 'any' = exactly capacity, concurrent reschedule) and locks are released on cancel (slotLocks count returned to baseline 70)",
+    "Frontend log shows 2 earlier 'Invalid Server Actions request' (x-forwarded-host vs origin *.preview.emergentcf.cloud) - not reproduced during this run; confirm ALLOWED_FORWARDED_ORIGINS is applied to serverActions.allowedOrigins"
+  ],
+  "updated_files": ["/app/backend/tests/test_espacioq_api.py", "/app/backend/tests/test_espacioq_edge.py"],
+  "success_rate": {"backend": "100% (23/23 pytest)", "frontend": "100% of requested journeys pass; 1 medium UI issue (hydration) + minor UX"},
+  "test_credentials": "Used /app/memory/test_credentials.md (owner + reception) - both work. Accounts not modified.",
+  "seed_data_creation": "Created: 12 TEST_ appointments (all CANCELLED afterwards), their TEST_ clients (test_*@example.com, test_ui_booking@example.com), 3 imported clients test_qa_ana/test_qa_formula/test_qa_luis@example.com, newsletter subscriber test_qa_nl@example.com (pending), contact message from test_qa_contact@example.com, outbox emails. home_sections CMS published v2 (marker) and v3 (reverted to original text) - content identical to original but revision count increased. Uploaded media asset TEST_QA test_qa.png deleted from mediaAsset (object remains in storage). Deleted own login rateLimitHit entries once (8) after lockout.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run: cd /app/backend/tests && python -m pytest test_espacioq_api.py test_espacioq_edge.py -p no:xdist -v (tests rotate X-Forwarded-For to avoid 429; if the XFF fix is applied, bookings tests may hit 429 after 10/10min - then space tests or clear own rateLimitHit 'booking_create' keys). Promo popup: use page.add_locator_handler on [data-slot=black-friday-promo-popup]. CMS publish uses window.confirm - accept dialog. Login limit 8 per 15 min per ip|email incl. successes: reuse espacioq_session cookie via context.add_cookies. Vitest NOT run because tests/setup-db.ts calls ensureSeeded() against the live DB (seed scripts forbidden for testing agent) - main agent should run it. JRN-3 (first-owner wizard) not tested.",
+  "rca of the issue": "XFF bypass: getClientIdentifier() takes fwd.split(',')[0]; the Emergent ingress/Cloudflare appends the real IP but keeps the client-supplied value first, so the attacker controls the key. Repro: send 11 POST /api/v1/bookings with header X-Forwarded-For: 203.0.113.7 -> 11th 429; change header -> allowed again. Mitigation: use the last (rightmost) XFF entry or a trusted header set by the edge (e.g. cf-connecting-ip / x-real-ip), and apply the same in loginAction."
+}

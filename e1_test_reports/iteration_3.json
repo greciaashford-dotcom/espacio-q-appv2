@@ -1,0 +1,28 @@
+{
+  "iteration": 3,
+  "phase": "2",
+  "passed": 10,
+  "failed": 0,
+  "bugs": [],
+  "action_items": [
+    {"type": "human_verification", "severity": "low", "item": "JRN-40: someone has to check a real inbox and how the email looks. Statuses stay ACCEPTED because there is no delivery webhook (known spec deviation)."},
+    {"type": "note", "severity": "low", "item": "Reply-To on the salon contact notice was checked only in code (lib/email/notices.ts:107 replyTo: msg.email, sent to the provider as contact_email). The delivery row does not store Reply-To, so the API cannot confirm it."}
+  ],
+  "retest_needed": false,
+  "checks": [
+    {"criterion": "JRN-26/27 provider status in admin", "name": "notice-email-set-dashboard-resend", "lane": "browser", "status": "passed", "evidence": "/admin shows 'Proveedor de email activo (Resend gestionado por Emergent)' and no 'Buzón Local Seguro' on the dashboard or in automations. Notice email set to delivered+tscheck-notice@resend.dev and saved ('Configuración guardada'); missing-notice warning hidden."},
+    {"criterion": "JRN-28 newsletter verify + welcome once", "name": "test_tscheck_p2_newsletter_welcome.py", "lane": "backend", "status": "passed", "evidence": "NEWSLETTER_VERIFY was first FAILED with [rate_limited], requeued and ACCEPTED at 19:52:57 by RESEND with a message id. Confirm was posted 3 times: subscriber confirmed and exactly 1 NEWSLETTER_WELCOME ACCEPTED."},
+    {"criterion": "JRN-27/32/33 contact ack + salon contact notice", "name": "test_tscheck_p2_contact_notice.py", "lane": "backend", "status": "passed", "evidence": "POST /api/v1/contact returned 200 and the message was saved. CONTACT_ACK ACCEPTED (RESEND, message id). SALON_NOTICE_CONTACT ACCEPTED to the notice address, containing the sender name and message text."},
+    {"criterion": "JRN-29/30/32 online booking welcome once + salon booking notice", "name": "test_tscheck_p2_booking_welcome_notice.py", "lane": "backend", "status": "passed", "evidence": "1st booking: APPOINTMENT_CONFIRMATION, 1 CLIENT_WELCOME (no promo words) and SALON_NOTICE_BOOKING, all ACCEPTED. The notice text contains ref, service, professional, Madrid date/time, client email/phone/name. 2nd booking with the same email: confirmation ACCEPTED, CLIENT_WELCOME count still 1."},
+    {"criterion": "JRN-31 panel-created first appointment welcome", "name": "panel-first-appt-client-welcome", "lane": "browser", "status": "passed", "evidence": "Owner created a manual appointment in /admin/agenda ('Cita creada correctamente (EQ-KTYGV6)'). DB: exactly 1 CLIENT_WELCOME ACCEPTED (id 01a1bcb3-...) for delivered+tscheck-panel-1794167235071@resend.dev."},
+    {"criterion": "JRN-35/36 reschedule, cancel, reminders once", "name": "test_tscheck_p2_reschedule_cancel_reminders.py", "lane": "backend", "status": "passed", "evidence": "This test's own reminder jobs were forced due and the worker was run twice before and after sending. 24H and 2H were each ACCEPTED exactly once. Reschedule via manage link (200) gave APPOINTMENT_RESCHEDULED ACCEPTED. Cancel (200) gave APPOINTMENT_CANCELLED: first rate_limited, then requeued and ACCEPTED."},
+    {"criterion": "JRN-38 failure path honest", "name": "test_tscheck_p2_failure_path.py", "lane": "backend", "status": "passed", "evidence": "Contact to tscheck-...@tscheck-nonexistent.zzzz returned 200 and the message was saved. CONTACT_ACK status FAILED with error '[undeliverable_recipient] Recipient looks undeliverable and was blocked...'. Not shown as sent."},
+    {"criterion": "JRN-34 notice + contact empty: dashboard warning (settings restored)", "name": "notice-email-empty-dashboard-warning", "lane": "browser", "status": "passed", "evidence": "Notice email cleared and saved (contactEmail was already empty). dashboard-missing-notice-email-warning is visible. salonSettings noticeEmail/contactEmail are back to null, the original state."},
+    {"criterion": "JRN-34 booking ok without notice", "name": "test_tscheck_p2_no_notice_when_empty.py", "lane": "backend", "status": "passed", "evidence": "Booking returned 200 with 1 APPOINTMENT_CONFIRMATION and 0 SALON_NOTICE_BOOKING for that appointment."},
+    {"criterion": "JRN-39 automatic queue processing", "name": "test_tscheck_p2_booking_welcome_notice.py+scheduler lease observation", "lane": "backend", "status": "passed", "evidence": "The panel APPOINTMENT_CONFIRMATION job was rate-limited at 19:47 and completed at 20:00:43.257, the exact lastRunAt of the in-app scheduler lease 'job-queue'. The lease runs every ~5 min (19:45:43, 19:55:43, 20:00:43)."}
+  ],
+  "notes": [
+    "The managed sender's rate limit was hit several times. Each time the delivery was FAILED with [rate_limited], then requeued and later ACCEPTED, as designed.",
+    "JRN-37 (campaigns) is out of scope by spec. The existing FAILED campaign rows show the explicit reason 'solo admite correo transaccional'."
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "iteration": 2,
+  "mode": "retest",
+  "passed": 16,
+  "failed": 0,
+  "bugs": [],
+  "action_items": [],
+  "notes": [
+    "CMS home_sections restored to original text (republished as v5; revision history now has 2 extra tscheck entries, expected).",
+    "Pre-existing hydration errors (#418/#423/#425) on public pages, known."
+  ],
+  "retest_needed": false,
+  "checks": [
+    {
+      "criterion": "JRN-1/2 public site + OpenAPI",
+      "name": "test_tscheck_public_openapi.py",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "retest: pytest 24 passed"
+    },
+    {
+      "criterion": "JRN-1/2 public site + OpenAPI",
+      "name": "public-pages-load",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "retest: reran-persisted PASSED"
+    },
+    {
+      "criterion": "JRN-4/5/25 auth and roles",
+      "name": "test_tscheck_auth_roles.py",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "retest: pytest 24 passed"
+    },
+    {
+      "criterion": "JRN-4/5/25 auth and roles",
+      "name": "auth-roles-login-logout",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "retest: reran-persisted PASSED"
+    },
+    {
+      "criterion": "JRN-6/7/8 booking + availability",
+      "name": "test_tscheck_availability.py",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "retest: pytest 24 passed"
+    },
+    {
+      "criterion": "JRN-6/7/8 booking + availability",
+      "name": "booking-ui-shows-in-agenda",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "retest: reran-persisted PASSED"
+    },
+    {
+      "criterion": "JRN-9/10/11 anti-double-booking",
+      "name": "test_tscheck_double_booking.py",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "retest: pytest 24 passed"
+    },
+    {
+      "criterion": "JRN-12..15 manage link",
+      "name": "test_tscheck_manage.py",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "retest: pytest 24 passed"
+    },
+    {
+      "criterion": "JRN-12..15 manage link",
+      "name": "manage-link-reschedule-cancel",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "retest: reran-persisted PASSED"
+    },
+    {
+      "criterion": "JRN-16/17/18 CMS + media",
+      "name": "test_tscheck_media.py",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "retest: pytest 24 passed"
+    },
+    {
+      "criterion": "JRN-16/17/18 CMS + media",
+      "name": "media-upload-validation",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "retest: reran-persisted PASSED"
+    },
+    {
+      "criterion": "JRN-19/20/21 newsletter, contact, Excel",
+      "name": "test_tscheck_newsletter_contact_excel.py",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "retest: pytest 24 passed"
+    },
+    {
+      "criterion": "JRN-19/20/21 newsletter, contact, Excel",
+      "name": "contact-newsletter-forms",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "retest: reran-persisted PASSED"
+    },
+    {
+      "criterion": "JRN-22/23/24 jobs + seed",
+      "name": "test_tscheck_jobs_seed.py",
+      "lane": "backend",
+      "status": "passed",
+      "evidence": "retest: pytest 24 passed"
+    },
+    {
+      "criterion": "JRN-22/23/24 jobs + seed",
+      "name": "process-queue-button",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "retest: reran-persisted PASSED"
+    },
+    {
+      "criterion": "JRN-16: CMS draft/publish on MongoDB",
+      "name": "cms-draft-publish-restore",
+      "lane": "browser",
+      "status": "passed",
+      "evidence": "Owner edited home_sections intro.quote -> tscheck-cms-<ts>; 'Guardar borrador' -> status 'Borrador guardado', public home (fresh context) still shows original & not new text; 'Publicar' -> 'Publicado', Restaurar(revision) count +1, public home shows new text; republished original -> home shows original. Mongo: draftData/publishedData quote = original, hasUnpublished=false, version=5."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # ESPACIO Q · Plataforma Web y Panel de Gestión (Madrid, España)
 
-Aplicación web integral de producción para **ESPACIO Q** (salón de belleza en Madrid, España), construida con **Next.js 14 App Router**, **TypeScript**, **Tailwind CSS** (paleta editorial **Zen Linen**), **PostgreSQL 16** (con restricciones anti-solapamiento `EXCLUDE USING gist`) y **Prisma ORM**.
+Aplicación web integral de producción para **ESPACIO Q** (salón de belleza en Madrid, España), construida con **Next.js 14 App Router**, **TypeScript**, **Tailwind CSS** (paleta editorial **Zen Linen**), **MongoDB** (driver oficial `mongodb`, capa de datos propia `lib/db/prisma.ts` con API compatible con Prisma; anti-solapamiento mediante bloqueos atómicos por minuto con índice único).
 
 ---
 
@@ -15,10 +15,10 @@ Aplicación web integral de producción para **ESPACIO Q** (salón de belleza en
    - Interpolación automática de datos fiscales/legales configurados en `/admin/configuracion` (mostrando marcadores honestos `[Dato pendiente de configurar...]` mientras el titular no los complete, sin inventar NIF ni razón social).
 3. **CMS Integral Sin Tocar Código (`/admin/contenido` y `/admin/multimedia`)**
    - Edición con flujo **Borrador / Publicado** e historial de versiones (`ContentRevision`) para cabecera, pie de página, hero 3D, todas las secciones de portada, páginas secundarias, textos del asistente de reserva, textos de newsletter y los 5 documentos legales.
-   - Biblioteca multimedia con subida local validada por magic bytes (bloqueando SVG ejecutable) e importación/referencia HTTPS con defensa anti-SSRF por resolución DNS.
+   - Biblioteca multimedia con subida a Emergent Object Storage validada por magic bytes (bloqueando SVG ejecutable) e importación/referencia HTTPS con defensa anti-SSRF por resolución DNS.
 4. **Motor de Reservas Atómico y Horarios en `Europe/Madrid`**
    - Cálculo de disponibilidad en servidor respetando cambios de hora DST (`Europe/Madrid`), turnos partidos, excepciones/festivos, intersección salón ∩ profesional y buffers pre/post servicio.
-   - Protección contra condiciones de carrera en base de datos mediante `EXCLUDE USING gist` sobre `Occupancy` y `ResourceReservation`, snapshots inmutables del servicio/precio e idempotencia.
+   - Protección contra condiciones de carrera mediante documentos `slotLocks` (índice único `resource+minute`) para cada `Occupancy` / `ResourceReservation` activa, con compensación sin transacciones, snapshots inmutables del servicio/precio e idempotencia.
    - Sincronización preparada para **Google Business Profile API (OAuth 2.0)** y **Google Places API**, con fallback seguro a **Horario Manual** y detector de conflictos sobre citas futuras (`ScheduleConflictAlert`) sin cancelaciones automáticas.
 5. **CRM, Excel `.xlsx` Real y Marketing con Supresión LSSI/RGPD**
    - Gestión de clientes (`/admin/clientes`), anonimización irreversible RGPD y descarga de plantilla, previsualización Dry-Run, importación y exportación en formato real **`.xlsx`** (`exceljs`) con protección frente a inyección de fórmulas (`=`, `+`, `-`, `@`) y sin activar jamás consentimiento comercial por importar un archivo.
@@ -26,56 +26,16 @@ Aplicación web integral de producción para **ESPACIO Q** (salón de belleza en
 
 ---
 
-## Requisitos Previos
+## Estructura y puesta en marcha (Emergent)
 
-- **Node.js** `>= 20.x` (probado en `v24.13.0`) y **npm**.
-- **PostgreSQL 16+** con extensión estándar `btree_gist`.
-
----
-
-## Instalación y Puesta en Marcha Local
-
-1. **Instalar dependencias:**
-   ```bash
-   npm install
-   ```
-
-2. **Configurar variables de entorno:**
-   Copia `.env.example` a `.env` y ajusta `DATABASE_URL`, `AUTH_SECRET` (mínimo 32 caracteres) y `TOKEN_ENCRYPTION_KEY` (64 caracteres hexadecimales / 32 bytes):
-   ```bash
-   cp .env.example .env
-   ```
-   *(En este entorno local ya existe un clúster PostgreSQL 16 inicializado en `.pgdata` escuchando en `localhost:5433`, base de datos `espacio_q`).*
-
-3. **Base de datos PostgreSQL local (auto-arranque integrado):**
-   Al ejecutar `npm run dev`, `npm run start`, `npm run test` o `npm run db:migrate`, el script `scripts/ensure-db.mjs` comprueba si PostgreSQL está escuchando en `localhost:5433` y, si está detenido, lo arranca automáticamente desde `.pgdata`. También puedes iniciarlo o detenerlo manualmente:
-   ```powershell
-   npm run db:start
-   npm run db:stop
-   ```
-
-4. **Aplicar esquema Prisma + restricciones SQL `EXCLUDE USING gist` y semilla inicial:**
-   ```bash
-   npm run db:migrate
-   npm run db:seed
-   ```
-
-5. **Crear el primer usuario administrador (`OWNER_ADMIN`):**
-   Por seguridad no existen contraseñas por defecto en el código. Puedes crear la cuenta inicial desde la pantalla `/acceso` (asistente de primer arranque disponible únicamente cuando `User.count() === 0`) o mediante CLI:
-   ```powershell
-   $env:ADMIN_BOOTSTRAP_EMAIL="direccion@tudominio.es"
-   $env:ADMIN_BOOTSTRAP_PASSWORD="TuPasswordSeguraDeAlMenos10Caracteres"
-   $env:ADMIN_BOOTSTRAP_NAME="Dirección ESPACIO Q"
-   npm run admin:create
-   ```
-
-6. **Arrancar servidor de desarrollo:**
-   ```bash
-   npm run dev
-   ```
-   - Web pública: http://localhost:3000
-   - Acceso al panel: http://localhost:3000/acceso
-   - Panel de gestión: http://localhost:3000/admin
+- `frontend/` → aplicación **Next.js 14** completa (App Router, server actions, route handlers). Supervisor ejecuta `yarn start` = `next build && next start` en el puerto 3000 (`yarn start:dev` para modo desarrollo).
+- `backend/server.py` → proxy FastAPI mínimo: el ingress envía `/api/*` al puerto 8001 y se reenvía tal cual a Next.js (`NEXT_INTERNAL_URL`). Devuelve 503 si MongoDB no responde.
+- Base de datos: solo `MONGO_URL` y `DB_NAME`. Índices únicos/secundarios generados desde `prisma/schema.prisma` (`yarn db:gen` → `lib/db/schema.generated.ts`) y creados al conectar. Sin transacciones multi-documento.
+- Semilla idempotente: `yarn db:seed` (también se carga automáticamente al arrancar si la base está vacía, `instrumentation-node.ts`).
+- Alta de usuarios por consola: `BOOTSTRAP_PASSWORD=... npx tsx --env-file=.env prisma/create-admin.ts --email x@y --name "Nombre" --role OWNER_ADMIN`.
+- Cola de trabajos: `/app/.emergent/crons.yml` llama `POST /api/internal/jobs` cada 5 min (Bearer `WEBHOOK_CRON_SECRET`); manualmente con `Bearer CRON_SECRET`.
+- Tests: `yarn test` (Vitest contra MongoDB real) · `yarn typecheck` · `yarn build`.
+- OpenAPI: `GET /api/openapi.json`.
 
 ---
 

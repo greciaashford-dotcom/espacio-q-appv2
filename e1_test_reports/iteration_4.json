@@ -1,0 +1,26 @@
+{
+  "iteration": 4,
+  "phase": "3",
+  "passed": 11,
+  "failed": 0,
+  "retest_needed": false,
+  "bugs": [],
+  "action_items": [
+    {"type": "note", "severity": "low", "detail": "contact-google-consent-withdraw: the first run logged 3 maps.googleapis.com JS requests right after 'Guardar' turned maps off. They came from the Google iframe, which was still loading when consent was withdrawn. On rerun I counted requests separately during the swap (0) and after the reload (0), and the check passed. After withdrawal no new Google requests are made. An iframe that is mid-load can finish its in-flight requests before it unmounts. This is not a defect."},
+    {"type": "note", "severity": "low", "detail": "The address is displayed as 'Calle de Pelayo, 41, 28004, Madrid' (with commas). The directions URL destination is 'ESPACIO Q, Calle de Pelayo 41, 28004 Madrid', which matches the spec."},
+    {"type": "note", "severity": "low", "detail": "Existing hydration errors (React #418/#423/#425) still appear on public pages. These are listed in spec_deviations."}
+  ],
+  "checks": [
+    {"criterion": "JRN-41: default OSM map, no Google before consent", "name": "contact-osm-default-no-google", "lane": "browser", "status": "passed", "evidence": "Rejected cookies, then loaded /contacto 3 times: OSM map with data-lat=40.4241269 and data-lng=-3.6976262, 1 leaflet marker, '© OpenStreetMap' shown; 0 requests to google/gstatic/googleapis"},
+    {"criterion": "JRN-42/JRN-43 + JRN-44: consent from map, reload, withdraw", "name": "contact-google-consent-withdraw", "lane": "browser", "status": "passed", "evidence": "'Ver en Google Maps' opens the consent notice; 'Aceptar y cargar Google Maps' shows the Google iframe with the same URL (no reload); cookie-opt-maps is on in preferences; after reload the Google embed shows directly; turning it off and saving goes back to OSM, and 0 Google requests after the swap and after reload (first run counted in-flight iframe requests; see note)"},
+    {"criterion": "JRN-45: accept-all shows Google embed", "name": "contact-accept-all-google", "lane": "browser", "status": "passed", "evidence": "Banner 'Aceptar' on a fresh browser shows the contact-map-google iframe with a google.com/maps src"},
+    {"criterion": "JRN-46/JRN-47: Cómo llegar + default directions text", "name": "contact-directions-links", "lane": "browser", "status": "passed", "evidence": "New tab opens https://www.google.com/maps/dir/?api=1&destination=ESPACIO Q, Calle de Pelayo 41, 28004 Madrid; 'Abrir en Google Maps' href is valid; Metro default text and Aparcamiento present; Autobús absent"},
+    {"criterion": "JRN-48: editable directions via CMS", "name": "contact-directions-cms-edit", "lane": "browser", "status": "passed", "evidence": "In /admin/contenido/page_contacto: the draft (tscheck Metro + Autobús) was not shown publicly; after publishing, revisions went up by 1 and /contacto showed the new Metro and Autobús sections; original texts restored and published (Metro default, Autobús hidden)"},
+    {"criterion": "JRN-49/JRN-50: responsive, a11y, tile failure", "name": "contact-map-responsive-a11y-tilefail", "lane": "browser", "status": "passed", "evidence": "At 375 and 1440 px: scrollWidth-innerWidth=0, tiles loaded, aria-label 'Mapa de ubicación de ESPACIO Q'; contact-directions-btn reachable by Tab; with tile.openstreetmap.org blocked the error overlay shows, the address is visible, and Cómo llegar opens google.com/maps/dir/"},
+    {"criterion": "Regression: public pages", "name": "public-pages-load", "lane": "browser", "status": "passed", "evidence": "Rerun passed (known hydration warnings only)"},
+    {"criterion": "Regression: booking UI to agenda", "name": "booking-ui-shows-in-agenda", "lane": "browser", "status": "passed", "evidence": "booked 2026-11-28 14:45 tscheck UI; shown in agenda"},
+    {"criterion": "Regression: contact/newsletter forms", "name": "contact-newsletter-forms", "lane": "browser", "status": "passed", "evidence": "Rerun passed; 400 is the expected invalid-email validation"},
+    {"criterion": "Regression: anti-double-booking + phase 1-2 APIs", "name": "e1_tests (pytest suite, 22 tests incl. test_tscheck_double_booking.py, test_tscheck_p2_contact_notice.py)", "lane": "backend", "status": "passed", "evidence": "22 passed, exit 0"},
+    {"criterion": "Regression: CMS draft/publish (phase 1)", "name": "contact-directions-cms-edit (covers CMS publish/revision path)", "lane": "browser", "status": "passed", "evidence": "Same CMS draft/publish/revision flow verified on the page_contacto key"}
+  ]
+}
