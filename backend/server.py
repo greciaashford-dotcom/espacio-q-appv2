@@ -35,6 +35,17 @@ def mongo_reachable() -> bool:
         return False
 
 
+@app.get("/health")
+@app.get("/api/health")
+async def health():
+    """Health check del despliegue: el proxy responde siempre; informa del estado de Next.js y MongoDB."""
+    try:
+        upstream_ok = (await client.get("/health", timeout=3.0)).status_code < 500
+    except httpx.HTTPError:
+        upstream_ok = False
+    return {"status": "ok", "next": upstream_ok}
+
+
 @app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])
 async def proxy(path: str, request: Request):
     headers = [(k, v) for k, v in request.headers.items() if k.lower() not in HOP_BY_HOP and k.lower() != "accept-encoding"]

@@ -30,19 +30,24 @@ export function getGoogleIntegrationConfigStatus() {
     hasPlacesApi,
     businessLocationId: process.env.GOOGLE_BUSINESS_LOCATION_ID?.trim() || null,
     placeId: process.env.GOOGLE_PLACE_ID?.trim() || null,
-    redirectUri:
-      process.env.GOOGLE_REDIRECT_URI?.trim() ||
-      `${process.env.APP_URL || "http://localhost:3000"}/api/integrations/google/callback`,
+    redirectUri: googleRedirectUri(),
   };
+}
+
+/** Redirect URI de OAuth: GOOGLE_REDIRECT_URI o APP_URL del entorno (sin valores por defecto locales). */
+function googleRedirectUri(): string {
+  const explicit = process.env.GOOGLE_REDIRECT_URI?.trim();
+  if (explicit) return explicit;
+  const appUrl = process.env.APP_URL?.trim().replace(/\/$/, "");
+  if (!appUrl) throw new Error("APP_URL o GOOGLE_REDIRECT_URI son obligatorias para Google OAuth.");
+  return `${appUrl}/api/integrations/google/callback`;
 }
 
 export function buildGoogleBusinessOAuthUrl(stateToken: string): string | null {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
   if (!clientId) return null;
 
-  const redirectUri =
-    process.env.GOOGLE_REDIRECT_URI?.trim() ||
-    `${process.env.APP_URL || "http://localhost:3000"}/api/integrations/google/callback`;
+  const redirectUri = googleRedirectUri();
 
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   url.searchParams.set("client_id", clientId);

@@ -1,4 +1,5 @@
 import { prisma, sequentialWrites } from "@/lib/db/prisma";
+import { appUrl as getAppUrl } from "@/lib/app-url";
 import {
   generateOpaqueToken,
   hashToken,
@@ -124,7 +125,7 @@ export async function requestNewsletterSubscription(params: {
     },
   });
 
-  const appUrl = process.env.APP_URL || "http://localhost:3000";
+  const appUrl = getAppUrl();
   const verifyUrl = `${appUrl}/newsletter/confirmar?token=${encodeURIComponent(
     rawVerifyToken
   )}`;
@@ -257,7 +258,7 @@ export async function confirmNewsletterSubscription(rawToken: string): Promise<
   });
 
   if (shouldSendWelcome) {
-    const appUrl = process.env.APP_URL || "http://localhost:3000";
+    const appUrl = getAppUrl();
     const unsubUrl = `${appUrl}/newsletter/baja?token=${encodeURIComponent(
       signUnsubscribeToken(subscriber.id)
     )}`;

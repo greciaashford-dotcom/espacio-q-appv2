@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { appUrl as getAppUrl } from "@/lib/app-url";
 import { z } from "zod";
 import { prisma, sequentialWrites } from "@/lib/db/prisma";
 import { getCurrentUser, canManageCampaigns } from "@/lib/auth/session";
@@ -120,7 +121,7 @@ export async function sendTestCampaignEmailAction(params: {
   });
   if (!campaign) return { ok: false, error: "Campaña no encontrada." };
 
-  const appUrl = process.env.APP_URL || "http://localhost:3000";
+  const appUrl = getAppUrl();
   const rendered = renderZenLinenEmailLayout({
     heading: campaign.heading,
     preheader: campaign.preheader ?? campaign.subject,

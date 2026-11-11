@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0 -p 3000",
-    "build": "next build",
-    "start": "next build && next start -H 0.0.0.0 -p 3000",
+    "build": "next build && node scripts/postbuild-standalone.mjs",
+    "start": "yarn build && HOSTNAME=0.0.0.0 node .next/standalone/server.js",
+    "start:standalone": "HOSTNAME=0.0.0.0 node .next/standalone/server.js",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "db:gen": "node scripts/gen-db-schema.mjs",

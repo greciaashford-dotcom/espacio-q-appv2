@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import { appUrl as getAppUrl } from "@/lib/app-url";
 import {
   dispatchEmailWithAudit,
   renderZenLinenEmailLayout,
@@ -50,7 +51,7 @@ export async function processDueJobsAndCampaigns(params?: {
     take: batchSize,
   });
 
-  const appUrl = process.env.APP_URL || "http://localhost:3000";
+  const appUrl = getAppUrl();
 
   for (const candidate of candidates) {
     // Límite del proveedor alcanzado: se deja el resto de la cola para la siguiente pasada
