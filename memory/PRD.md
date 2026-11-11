@@ -46,7 +46,8 @@ Imported Next.js 14 repo (App Router, TS, Tailwind, Prisma/PostgreSQL). Phase 1:
 
 ## Deployment layout (2026-11-11)
 - Next.js `output: "standalone"`; `yarn build` = next build + scripts/postbuild-standalone.mjs (copies public/, .next/static, and .env in preview into .next/standalone). `yarn start` = build + `HOSTNAME=0.0.0.0 node .next/standalone/server.js` (listens on $PORT: 3000 preview via supervisor, 8080 in prod).
-- Health: Next GET /health; FastAPI GET /health and /api/health.
+- Health: Next GET /health; FastAPI GET /health and /api/health (instant, independent of Next/Mongo).
+- Prod container (nginx :8080 → uvicorn :8001, no Next.js process): backend/server.py proxies ALL paths and, if NEXT_INTERNAL_URL is unreachable for 20 s, spawns `node frontend/.next/standalone/server.js` on 127.0.0.1:3100 and keeps it alive (restart on exit). In preview the supervisor-run Next.js on :3000 is preferred and no child is spawned.
 - APP_URL is required (no localhost fallbacks); SITE_URL for SEO.
 
 ## Known pre-existing issues (not touched, out of scope)

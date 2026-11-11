@@ -1,26 +1,100 @@
-"""Thin pass-through proxy: the Emergent ingress sends /api/* to :8001; every request is forwarded
-unchanged to the Next.js server (App Router route handlers) running on :3000. No business logic here."""
-import os
+"""Thin pass-through proxy in front of the Next.js server (pages, server actions, /api route handlers).
+
+- Preview: supervisor runs Next.js on NEXT_INTERNAL_URL (:3000); the ingress sends /api/* here.
+- Production container (nginx :8080 -> :8001, no Next.js process): if NEXT_INTERNAL_URL stays unreachable,
+  this process starts the Next.js standalone server itself on 127.0.0.1:3100 and proxies every path to it.
+No business logic here. /health answers immediately and never depends on Next.js or MongoDB.
+"""
+import asyncio
 import logging
+import os
+import shutil
+import subprocess
+from contextlib import asynccontextmanager
+from pathlib import Path
 
 import httpx
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 from pymongo import MongoClient
-from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-NEXT_INTERNAL_URL = os.environ["NEXT_INTERNAL_URL"].rstrip("/")
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logger = logging.getLogger("next-proxy")
 
-logger = logging.getLogger("api-proxy")
-app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
-client = httpx.AsyncClient(base_url=NEXT_INTERNAL_URL, timeout=httpx.Timeout(120.0, connect=5.0), follow_redirects=False)
+PRIMARY_URL = (os.environ.get("NEXT_INTERNAL_URL") or "").rstrip("/")
+FALLBACK_PORT = 3100
+FALLBACK_URL = f"http://127.0.0.1:{FALLBACK_PORT}"
+STANDALONE_DIR = Path(__file__).resolve().parent.parent / "frontend" / ".next" / "standalone"
+SPAWN_GRACE_SECONDS = 20
 
 HOP_BY_HOP = {
     "connection", "keep-alive", "proxy-authenticate", "proxy-authorization", "te", "trailers",
     "transfer-encoding", "upgrade", "content-length", "content-encoding",
 }
+
+state = {"upstream": PRIMARY_URL or None, "child": None}
+client = httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=5.0), follow_redirects=False)
+
+
+async def reachable(base: str) -> bool:
+    try:
+        return (await client.get(f"{base}/health", timeout=2.0)).status_code < 500
+    except httpx.HTTPError:
+        return False
+
+
+def spawn_next() -> subprocess.Popen | None:
+    server_js = STANDALONE_DIR / "server.js"
+    node = shutil.which("node")
+    if not node or not server_js.exists():
+        logger.error("Cannot start Next.js: node=%s, server.js exists=%s (run `yarn build` in /app/frontend)", node, server_js.exists())
+        return None
+    env = {**os.environ, "PORT": str(FALLBACK_PORT), "HOSTNAME": "127.0.0.1", "NODE_ENV": "production"}
+    logger.info("Starting Next.js standalone server on %s", FALLBACK_URL)
+    return subprocess.Popen([node, str(server_js)], cwd=str(STANDALONE_DIR), env=env)
+
+
+def stop_child():
+    child = state["child"]
+    if child and child.poll() is None:
+        child.terminate()
+    state["child"] = None
+
+
+async def supervise_next():
+    """Prefers the externally managed Next.js; otherwise keeps an own standalone server alive."""
+    unreachable_since = asyncio.get_running_loop().time()
+    while True:
+        now = asyncio.get_running_loop().time()
+        if PRIMARY_URL and await reachable(PRIMARY_URL):
+            unreachable_since = now
+            if state["upstream"] != PRIMARY_URL:
+                logger.info("Using Next.js at %s", PRIMARY_URL)
+            state["upstream"] = PRIMARY_URL
+            stop_child()
+        elif not PRIMARY_URL or now - unreachable_since >= SPAWN_GRACE_SECONDS:
+            child = state["child"]
+            if child is None or child.poll() is not None:
+                state["child"] = await asyncio.to_thread(spawn_next)
+            if await reachable(FALLBACK_URL):
+                state["upstream"] = FALLBACK_URL
+        await asyncio.sleep(2 if state["upstream"] is None else 5)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    task = asyncio.create_task(supervise_next())
+    yield
+    task.cancel()
+    stop_child()
+    await client.aclose()
+
+
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
 
 
 def mongo_reachable() -> bool:
@@ -38,16 +112,14 @@ def mongo_reachable() -> bool:
 @app.get("/health")
 @app.get("/api/health")
 async def health():
-    """Health check del despliegue: el proxy responde siempre; informa del estado de Next.js y MongoDB."""
-    try:
-        upstream_ok = (await client.get("/health", timeout=3.0)).status_code < 500
-    except httpx.HTTPError:
-        upstream_ok = False
-    return {"status": "ok", "next": upstream_ok}
+    return {"status": "ok", "next": state["upstream"] is not None}
 
 
-@app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])
+@app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])
 async def proxy(path: str, request: Request):
+    upstream_base = state["upstream"]
+    if not upstream_base:
+        return JSONResponse({"error": "Servicio iniciándose, inténtalo de nuevo en unos segundos."}, status_code=503)
     headers = [(k, v) for k, v in request.headers.items() if k.lower() not in HOP_BY_HOP and k.lower() != "accept-encoding"]
     host = request.headers.get("host", "")
     if "x-forwarded-host" not in request.headers and host:
@@ -56,7 +128,7 @@ async def proxy(path: str, request: Request):
         headers.append(("x-forwarded-proto", request.url.scheme))
     headers.append(("accept-encoding", "identity"))
     body = await request.body()
-    url = f"/api/{path}"
+    url = f"{upstream_base}/{path}"
     if request.url.query:
         url += f"?{request.url.query}"
     try:
@@ -65,7 +137,7 @@ async def proxy(path: str, request: Request):
         logger.error("Next.js upstream unavailable: %s", exc)
         return JSONResponse({"error": "Servicio no disponible temporalmente."}, status_code=503)
 
-    if upstream.status_code >= 500 and not mongo_reachable():
+    if upstream.status_code >= 500 and path.startswith("api/") and not await asyncio.to_thread(mongo_reachable):
         return JSONResponse({"error": "Base de datos no disponible temporalmente."}, status_code=503)
 
     out = Response(content=upstream.content, status_code=upstream.status_code)
@@ -73,8 +145,3 @@ async def proxy(path: str, request: Request):
         if k.lower() not in HOP_BY_HOP:
             out.headers.append(k, v)
     return out
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    await client.aclose()
