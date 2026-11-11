@@ -26,11 +26,17 @@ A beauty salon in Madrid (ESPACIO Q, Calle de Pelayo 41, 28004) gets a public ed
 | F-11 | Contact page map of the salon: OpenStreetMap by default (no cookies); Google Maps embed only after the visitor accepts third-party cookies | Visitante | 3 |
 | F-12 | "Cómo llegar" button opening Google Maps directions to the salon | Visitante | 3 |
 | F-13 | "Cómo llegar" text (metro, bus, parking) under the map, editable and publishable from the panel CMS | Visitante, Admin | 3 |
+| F-14 | Every link / page navigation and every booking & manage step lands at the top of the page/wizard | Visitante | 4 |
+| F-15 | Discount and newsletter popups smaller on desktop so they fit entirely (mobile unchanged) | Visitante | 4 |
+| F-16 | SEO (local "peluquería Chueca", canonical https://espacioq.es, structured data, sitemap, meta) and GEO (AI crawlers allowed, llms.txt, server-rendered facts) | Visitante | 4 |
+| F-17 | FAQ page /preguntas-frecuentes editable from the panel, with FAQPage structured data | Visitante, Admin | 4 |
+| F-18 | ESPACIO Q "Q" favicon + app icons + web manifest | Visitante | 4 |
 
 ## Phases
 - **Phase 1** → Next.js running on Emergent with MongoDB; full parity of existing features; anti-double-booking; object storage; scheduled job processing → F-1, F-2, F-3, F-4, F-5, F-6. Docs: `/app/memory/product/phase1/requirement.md`, `/app/memory/product/phase1/journeys.md`
 - **Phase 2** → Real email everywhere via Resend + welcome emails + salon notices → F-7, F-8, F-9, F-10. Docs: `/app/memory/product/phase2/requirement.md`, `/app/memory/product/phase2/journeys.md`
 - **Phase 3** → Contact page map + directions + editable transport text → F-11, F-12, F-13. Docs: `/app/memory/product/phase3/requirement.md`, `/app/memory/product/phase3/journeys.md`
+- **Phase 4** → Scroll-to-top, desktop popup sizing, SEO + GEO, FAQ page, favicon → F-14…F-18. Docs: `/app/memory/product/phase4/requirement.md`, `/app/memory/product/phase4/journeys.md`
 
 ## UI/UX Rules
 - Keep the existing "Zen Linen" editorial design, Spanish copy, WCAG 2.2 AA behaviour and layout. No redesign.

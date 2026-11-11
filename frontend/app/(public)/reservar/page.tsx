@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import { withSeo } from "@/lib/seo/site";
 import { Clock, MapPin } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import {
@@ -18,13 +19,13 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const block = await getPublishedCmsBlock("page_reservar");
-  return {
+  return withSeo({
     title: block.seoTitle || "Reservar Cita Online · ESPACIO Q Madrid",
     description:
       block.seoDescription ||
       "Reserva tu cita online en ESPACIO Q Madrid (Calle de Pelayo, 41) por servicio, especialista y horario real.",
     alternates: { canonical: "/reservar" },
-  };
+  });
 }
 
 function addCalendarDaysIso(baseDateStr: string, offsetDays: number): string {

@@ -216,9 +216,9 @@ export function NewsletterDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="overflow-y-auto p-0 sm:max-w-[460px]">
+      <DialogContent data-testid="newsletter-dialog" className="overflow-y-auto p-0 sm:max-w-[460px] lg:max-w-[420px]">
         {config.imageUrl && (
-          <div className="relative h-36 max-h-[28svh] w-full bg-secondary sm:h-52 sm:max-h-none">
+          <div className="relative h-36 max-h-[28svh] w-full bg-secondary sm:h-52 sm:max-h-none lg:h-32">
             <Image
               src={config.imageUrl}
               alt={config.imageAlt || "Newsletter ESPACIO Q"}
@@ -230,14 +230,14 @@ export function NewsletterDialog({
           </div>
         )}
 
-        <div className="p-4 pt-4 sm:p-6 sm:pt-5">
+        <div className="p-4 pt-4 sm:p-6 sm:pt-5 lg:px-5 lg:pb-5 lg:pt-4">
           <DialogHeader>
             {config.eyebrow && (
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 {config.eyebrow}
               </p>
             )}
-            <DialogTitle className="mt-1 text-2xl sm:text-[26px]">
+            <DialogTitle className="mt-1 text-2xl sm:text-[26px] lg:text-[22px]">
               {status === "pending_verification"
                 ? config.pendingTitle
                 : status === "confirmed"
@@ -291,7 +291,7 @@ export function NewsletterDialog({
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="mt-5 space-y-4" noValidate>
+            <form onSubmit={handleSubmit} className="mt-5 space-y-4 lg:mt-3.5 lg:space-y-3" noValidate>
               <div className="space-y-1.5">
                 <Label htmlFor="newsletter-modal-email">
                   Correo electrónico <span aria-hidden="true">*</span>

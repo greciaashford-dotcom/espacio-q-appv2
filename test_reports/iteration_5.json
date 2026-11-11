@@ -1,0 +1,27 @@
+{
+  "summary": "Phase 4 (scroll, popups, SEO/GEO, JSON-LD, robots/sitemap/llms.txt, FAQ + CMS, favicon) tested end-to-end on the preview URL. New pytest suite test_phase4_seo_faq.py 29/29 passed (all 13 public pages: unique Spanish title/description, one H1, canonical/og:url https://espacioq.es/..., hreflang es-ES, og:image 1200x630, twitter summary_large_image, geo meta, meta robots noindex,nofollow + X-Robots-Tag noindex on preview, #jsonld-salon on every page, no aggregateRating/review; #jsonld-service Service+BreadcrumbList; #jsonld-faq 6 Q&As matching SSR <details>; robots.txt 12 UA groups with identical disallows; sitemap 36 URLs all with lastmod incl. FAQ/services; llms.txt has address/Chueca/metro/hours/phone/prices/booking+FAQ URLs; favicon/icons/manifest/og image 200 with correct types and sizes (ico 16/32/48, apple 180, 192, 512, maskable 512, og 1200x630)). Host logic verified locally: Host espacioq.es / www.espacioq.es -> index,follow and no X-Robots-Tag; other hosts -> noindex. Playwright: booking wizard steps 1->2->3->4->5->confirmation each land with the wizard top just below the 81px sticky header (scrollY 309, step H2 visible) even when clicked from far down (scrollY 1012-1593); manage page (390x844) reschedule/Volver/cancel/cancelled-message all scroll to manage card top below header; header/footer link navigation from page bottom -> scrollY 0; browser Back restored /servicios scrollY 1500; skip link, home hero anchor (#intro-salon, target top 80) and services chapter index still work. Popups at 1366x768, 1440x900, 1920x1080: promo (sh=ch=568) and newsletter (sh=ch=661) fully inside viewport, no inner scroll; 375x812 unchanged and fits. FAQ: SSR answers, first item open by default, Enter/Space toggle summary, Tab moves between summaries; footer-faq-link works. Admin /admin/contenido/page_faq: edit answer, remove item, add item, reorder, save draft (public unchanged), publish (public updated, revision v2 recorded), remove all + publish -> faq-empty-state shown, jsonld-faq omitted, still 1 H1. Original 6 items restored and published as v4 (verified byte-identical to pre-test publishedData; draft equals published; hasUnpublished=false). Regression: cookie banner accept -> Google map iframe loads on /contacto, home loads, booking flow creates & cancels booking, Vitest 68/68 passed. No functional defects found.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/reservar step 3", "issues": ["'Otra fecha en calendario' still uses the native browser <input type=date> picker (pre-existing, not Phase 4) instead of a styled calendar component"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_phase4_seo_faq.py", "/app/test_reports/pytest/phase4_seo.xml"],
+  "action_items": [
+    "Optional (a11y): skip link '#contenido-principal' scrolls correctly but focus stays on BODY; add tabIndex={-1} to <main id='contenido-principal'> so keyboard focus moves into main content",
+    "Optional: CMS revision history only records publishes from the panel, so the seeded v1 FAQ content has no revision to 'Restaurar' to; consider recording the seeded version as an initial revision"
+  ],
+  "critical_code_review_comments": [
+    "scroll-to-top-on-navigate.tsx: also scrolls on search-param-only changes (pathname+search key); fine today (only promo router.replace to /reservar?coupon), but any future in-page filter that uses router.replace with query params will jump to top - consider { scroll:false } aware handling",
+    "llms.txt served as text/markdown (acceptable for llms.txt)",
+    "sitemap lastmod for /preguntas-frecuentes now reflects the QA publish time (real data, expected)"
+  ],
+  "updated_files": ["/app/backend/tests/test_phase4_seo_faq.py"],
+  "success_rate": {"backend": "100% (29/29 phase4 HTTP checks; Vitest 68/68)", "frontend": "100%"},
+  "seed_data_creation": "One booking EQ-AR2VWK (test_scroll_phase4@example.com, SIMULATED_LOCAL email) created and then cancelled via manage page. CMS page_faq published v2/v3 during tests and restored to original content as v4 (note 'QA: restaurar contenido original'). No other data changed.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Run: REACT_APP_BACKEND_URL=<preview url> pytest /app/backend/tests/test_phase4_seo_faq.py -p no:xdist (REACT_APP_BACKEND_URL in frontend/.env may need quoting stripped). Mongo collections: emailDelivery (manage token in body 'gestion/<token>'), pageContent key page_faq, contentRevision. Promo popup sessionStorage key espacioq_bf25_popup_dismissed_v1 (4s delay). Wizard slot buttons have no testids; select via text regex ^\\d\\d:\\d\\d$."
+}

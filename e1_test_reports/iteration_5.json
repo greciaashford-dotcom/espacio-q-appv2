@@ -1,0 +1,26 @@
+{
+  "iteration": 5,
+  "phase": "4",
+  "passed": 10,
+  "failed": 0,
+  "retest_needed": false,
+  "bugs": [],
+  "action_items": [
+    {"type": "note", "severity": "low", "detail": "There is no 'Saltar animación' control anywhere in the codebase (grep found only 'Saltar al contenido principal'). I tested the /servicios chapter tabs instead: they scroll to their section (scrollY 500)."},
+    {"type": "improvement", "severity": "low", "detail": "In /admin/contenido/page_faq at 1280x720, the sticky revision-history <aside> (ul.max-h-72) covers the first item's 'Eliminar' button, so a normal click times out. The check clicks it with a DOM click instead. Users may have to scroll before they can delete."},
+    {"type": "note", "severity": "low", "detail": "The fixed header hides on scroll-down. After a wizard step change, the step heading sits about 41-54px from the top, where the header would be if it were showing. On screenshots the heading is fully visible."},
+    {"type": "note", "severity": "low", "detail": "The FAQ CMS check published the unchanged original first, which added revisions as a baseline. It then restored that revision and published it. The published FAQ data now matches the original six items (verified in Mongo, hasUnpublished=false). The admin revision history has extra tscheck revisions (v2-v9)."}
+  ],
+  "checks": [
+    {"criterion": "JRN-57/58/59/60/61/62/66: meta, JSON-LD, robots, sitemap, llms.txt, raw HTML, icons", "name": "backend/e1_tests/test_tscheck_p4_seo.py", "lane": "backend", "status": "passed", "evidence": "4 passed: GET of 5 pages: unique titles and descriptions, 1 H1 each, canonical https://espacioq.es/<path>, og:url, og 1200x630 (image 200), twitter card, hreflang es-ES, geo, X-Robots-Tag noindex. JSON-LD: HairSalon with Pelayo/28004/geo/hours/Chueca/ReserveAction, WebSite+Organization, Service+BreadcrumbList, FAQPage with 6 items, no aggregateRating. robots.txt has 11 bots and the disallow rules. Sitemap uses only espacioq.es. llms.txt complete. Icons 180/192/512 PNG, ico, manifest with maskable icon. Preview ingress /preguntas-frecuentes: x-robots-tag noindex, nofollow."},
+    {"criterion": "JRN-51/JRN-54: page navigation lands at top; anchors go to sections", "name": "p4-nav-scroll-top", "lane": "browser", "status": "passed", "evidence": "From the bottom of home, footer links at 1440 (/preguntas-frecuentes, /servicios, /contacto, /aviso-legal, /privacidad, /equipo) and at 390 (/preguntas-frecuentes, /cookies) all landed at scrollY 0. Chapter tab on /servicios gave scrollY 500."},
+    {"criterion": "JRN-52/JRN-53: wizard and manage steps scroll to top", "name": "p4-booking-manage-scroll-top", "lane": "browser", "status": "passed", "evidence": "Headings at viewport top: step2 '2. Elige profesional'@54, '4. Tus datos'@294, '5. Revisa y confirma'@41, 'Cita confirmada'@128 (header bottom 81). Manage page, after Cancelar: 'Gestión de tu cita'@45. Not covered: the manage page after a confirmed reschedule or cancel."},
+    {"criterion": "JRN-55/JRN-56: popups fit", "name": "p4-popups-fit-viewports", "lane": "browser", "status": "passed", "evidence": "Promo popup: 1366 134-678/768, 1440 199-743/900, 1920 292-834/1080, 390 156-727/844. Newsletter popup: 1366 77-741, 1440 167-831, 1920 208-872. No inner scroll. All buttons inside the viewport. Close works."},
+    {"criterion": "JRN-63/64/65: FAQ page and CMS editing", "name": "p4-faq-page-cms-edit-restore", "lane": "browser", "status": "passed", "evidence": "Six FAQs shown; footer link works; Enter on summary opens the item. A draft edit is not public. Publish: 7 items, the added item moved up one place, FAQPage JSON-LD has 7, revision count +1. All items removed: faq-empty-state shown and no FAQPage. Restored the baseline revision and republished: 6 items, no tscheck text."},
+    {"criterion": "JRN-66: favicon and manifest", "name": "p4-favicon-manifest", "lane": "browser", "status": "passed", "evidence": "Head declares favicon.ico, 16/32/192/512 icons, apple-touch-icon and manifest. Rendered 512x512, 32x32 and 180x180 images all show the Q glyph (headless has no tab strip, so I rendered the icon images instead of the tab)."},
+    {"criterion": "JRN-57/JRN-60: meta + noindex (browser surface)", "name": "covered-by-backend-seo", "lane": "backend", "status": "passed", "evidence": "No UI flow; this is server HTML, covered by test_meta_tags_unique_and_noindex."},
+    {"criterion": "JRN-58: JSON-LD", "name": "test_tscheck_p4_seo.py::test_jsonld", "lane": "backend", "status": "passed", "evidence": "All JSON-LD blocks parsed; required types and fields present."},
+    {"criterion": "JRN-59/61/62: robots/sitemap/llms/raw HTML", "name": "test_tscheck_p4_seo.py::test_robots_sitemap_llms_rawhtml", "lane": "backend", "status": "passed", "evidence": "Asserts passed (see above)."},
+    {"criterion": "JRN-66: icon files", "name": "test_tscheck_p4_seo.py::test_icons_manifest", "lane": "backend", "status": "passed", "evidence": "PNG headers 180/192/512; ico magic bytes; manifest includes a maskable icon."}
+  ]
+}

@@ -1,23 +1,28 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/seo/site";
+
+export const PRIVATE_PATHS = ["/admin", "/admin/", "/acceso", "/api/", "/reservar/gestion/", "/newsletter/"];
+export const AI_CRAWLERS = [
+  "GPTBot",
+  "OAI-SearchBot",
+  "ChatGPT-User",
+  "ClaudeBot",
+  "Claude-SearchBot",
+  "Claude-User",
+  "PerplexityBot",
+  "Perplexity-User",
+  "Google-Extended",
+  "Applebot-Extended",
+  "CCBot",
+];
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = (process.env.APP_URL || "http://localhost:3000").replace(/\/$/, "");
-
   return {
     rules: [
-      {
-        userAgent: "*",
-        allow: "/",
-        disallow: [
-          "/admin",
-          "/admin/",
-          "/acceso",
-          "/api/",
-          "/reservar/gestion/",
-          "/newsletter/",
-        ],
-      },
+      { userAgent: "*", allow: "/", disallow: PRIVATE_PATHS },
+      // Buscadores con IA (GEO): permitidos explícitamente en las páginas públicas
+      ...AI_CRAWLERS.map((userAgent) => ({ userAgent, allow: "/", disallow: PRIVATE_PATHS })),
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

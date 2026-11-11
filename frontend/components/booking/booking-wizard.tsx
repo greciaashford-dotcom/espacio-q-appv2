@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useScrollToTopOnChange } from "@/lib/ui/scroll";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -115,6 +116,8 @@ export function BookingWizard({
     : 1;
 
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(initialStep);
+  const wizardRef = useRef<HTMLDivElement>(null);
+  useScrollToTopOnChange(wizardRef, step);
   const [serviceId, setServiceId] = useState<string>(preselectedSvc?.id || "");
   const [professionalId, setProfessionalId] = useState<string>(
     preselectedProValidForSvc ?? (knownProAcrossCatalog ? knownProAcrossCatalog.id : "any")
@@ -492,7 +495,7 @@ export function BookingWizard({
   ];
 
   return (
-    <div data-slot="booking-wizard-active" className="space-y-8">
+    <div ref={wizardRef} data-slot="booking-wizard-active" data-testid="booking-wizard" className="space-y-8">
       {step < 6 && (
         <div className="space-y-4">
           <ol

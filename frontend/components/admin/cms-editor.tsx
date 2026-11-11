@@ -128,6 +128,7 @@ function templateFor(path: string[], sample: Json): Json {
   if (joined.endsWith("sections")) return { id: uid("clausula"), heading: "Nueva cláusula", content: "" };
   if (joined.includes("reviewsSection") && joined.endsWith("items")) return { author: "", text: "", date: "" };
   if (joined.includes("faqSection") && joined.endsWith("items")) return { question: "", answer: "" };
+  if (joined === "items") return { question: "Nueva pregunta", answer: "" };
   if (joined.endsWith("navItems") || joined.endsWith("legalLinks")) return { label: "", href: "/", visible: true };
   if (joined.endsWith("pillars")) return { title: "", badge: "", description: "", url: "" };
   if (joined.endsWith("showcaseMembers")) {
@@ -520,7 +521,7 @@ export function CmsEditor(props: {
 
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-      <div className="space-y-6 xl:col-span-8">
+      <div className="min-w-0 space-y-6 xl:col-span-8">
         {props.placeholders && props.placeholders.length > 0 && (
           <div className="rounded-editorial border border-border bg-card p-4 text-xs">
             <p className="font-semibold">Variables disponibles en los textos legales</p>
@@ -553,8 +554,8 @@ export function CmsEditor(props: {
         </div>
       </div>
 
-      <aside className="xl:col-span-4">
-        <div className="sticky top-6 space-y-4">
+      <aside className="min-w-0 xl:col-span-4 xl:self-start">
+        <div className="space-y-4 xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto">
           <div className="space-y-4 rounded-editorial border border-border bg-card p-5">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant={props.hasUnpublished || dirty ? "warning" : "success"}>

@@ -166,10 +166,10 @@ export function PromoCouponPopup({
               damping: 28,
               mass: 0.9,
             }}
-            className="relative z-10 w-full max-w-[500px] max-h-[92dvh] overflow-y-auto overscroll-contain rounded-[24px] border border-border bg-card text-foreground shadow-editorial"
+            data-testid="promo-coupon-popup" className="relative z-10 w-full max-w-[500px] max-h-[92dvh] overflow-y-auto overscroll-contain rounded-[24px] lg:max-w-[440px] border border-border bg-card text-foreground shadow-editorial"
           >
             {/* Cabecera Noir Black Friday con brillo sutil */}
-            <div className="relative overflow-hidden bg-primary px-5 pb-6 pt-6 text-primary-foreground sm:px-7 sm:pb-7 sm:pt-7">
+            <div className="relative overflow-hidden bg-primary px-5 pb-6 pt-6 text-primary-foreground sm:px-7 sm:pb-7 sm:pt-7 lg:px-6 lg:pb-5 lg:pt-5">
               {/* Destello ambiental cálido Zen Linen */}
               <motion.div
                 aria-hidden="true"
@@ -204,7 +204,7 @@ export function PromoCouponPopup({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.12, duration: 0.4 }}
-                    className="font-serif text-5xl font-normal leading-none tracking-tight text-primary-foreground sm:text-6xl"
+                    className="font-serif text-5xl font-normal leading-none tracking-tight text-primary-foreground sm:text-6xl lg:text-5xl"
                   >
                     −{BLACK_FRIDAY_PROMO.discountPercent}%
                   </motion.span>
@@ -215,7 +215,7 @@ export function PromoCouponPopup({
 
                 <h2
                   id="bf-promo-title"
-                  className="mt-2.5 font-serif text-xl font-normal leading-snug text-primary-foreground sm:text-2xl"
+                  className="mt-2.5 font-serif text-xl font-normal leading-snug text-primary-foreground sm:text-2xl lg:mt-2 lg:text-xl"
                 >
                   {BLACK_FRIDAY_PROMO.title}
                 </h2>
@@ -223,7 +223,7 @@ export function PromoCouponPopup({
             </div>
 
             {/* Cuerpo Zen Linen con cupón troquelado */}
-            <div className="space-y-4 p-4 sm:space-y-5 sm:p-7">
+            <div className="space-y-4 p-4 sm:space-y-5 sm:p-7 lg:space-y-3.5 lg:p-6">
               <p
                 id="bf-promo-desc"
                 className="text-xs leading-relaxed text-muted-foreground sm:text-sm"
@@ -232,7 +232,7 @@ export function PromoCouponPopup({
               </p>
 
               {/* Boleto / Cupón interactivo */}
-              <div className="relative rounded-2xl border border-dashed border-border bg-background px-3.5 py-3 sm:px-5 sm:py-4">
+              <div className="relative rounded-2xl border border-dashed border-border bg-background px-3.5 py-3 sm:px-5 sm:py-4 lg:py-3">
                 {/* Muescas laterales estilo invitación editorial */}
                 <span
                   aria-hidden="true"
@@ -284,7 +284,7 @@ export function PromoCouponPopup({
               </p>
 
               {/* Botones de acción */}
-              <div className="flex flex-col gap-2.5 pt-1">
+              <div className="flex flex-col gap-2.5 pt-1 lg:gap-1.5 lg:pt-0">
                 <Button
                   type="button"
                   size="lg"

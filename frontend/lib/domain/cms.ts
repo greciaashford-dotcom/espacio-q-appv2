@@ -7,6 +7,8 @@ import {
   DEFAULT_INTRO_FLIP_IMAGES,
   DEFAULT_MAPS_COOKIE_TEXTS,
   DEFAULT_MEDIA_ASSETS,
+  HOME_SEO,
+  LEGACY_HOME_SEO_TITLE,
   DEFAULT_TEAM_SHOWCASE_MEMBERS,
   type LegalDocumentData,
   type SalonHeroContent,
@@ -262,6 +264,10 @@ const fillMissing = (extra: CmsData) => (data: CmsData) => {
 };
 
 export async function migrateCmsDefaults() {
+  const home = await prisma.pageContent.findUnique({ where: { key: "home_hero" } });
+  if (home && (!home.seoTitle || home.seoTitle === LEGACY_HOME_SEO_TITLE)) {
+    await prisma.pageContent.update({ where: { key: "home_hero" }, data: HOME_SEO });
+  }
   await patchCmsBlock("page_contacto", fillMissing({ directions: DEFAULT_CONTACT_DIRECTIONS }));
   await patchCmsBlock("cookie_banner", fillMissing(DEFAULT_MAPS_COOKIE_TEXTS));
   // Solo se amplía el texto de la política si sigue siendo exactamente el original por defecto

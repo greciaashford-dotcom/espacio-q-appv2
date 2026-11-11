@@ -6,9 +6,9 @@ import { startJobScheduler } from "./lib/jobs/scheduler";
 ensureSeeded()
   .then(async (seeded) => {
     if (seeded) console.log("[boot] Base de datos vacía: semilla ESPACIO Q cargada.");
-    // Nuevos textos por defecto (p. ej. «Cómo llegar») sin pisar ediciones del salón
-    const { migrateCmsDefaults } = await import("./lib/domain/cms");
-    await migrateCmsDefaults();
+    // Nuevos bloques/textos por defecto (FAQ, «Cómo llegar», SEO) sin pisar ediciones del salón
+    const { ensureBaseCmsAndSettings } = await import("./lib/domain/cms");
+    await ensureBaseCmsAndSettings();
   })
   .catch((err) => console.error("[boot] No se pudo verificar/cargar la semilla en MongoDB:", err));
 

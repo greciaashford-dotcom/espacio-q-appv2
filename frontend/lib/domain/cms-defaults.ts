@@ -363,6 +363,46 @@ export const DEFAULT_MAPS_COOKIE_TEXTS = {
     "Permiten mostrar el mapa interactivo de Google Maps en la página de Contacto. Sin esta opción verás un mapa de OpenStreetMap sin cookies.",
 };
 
+export const LEGACY_HOME_SEO_TITLE = "ESPACIO Q · Salón de Belleza en Madrid";
+export const HOME_SEO = {
+  seoTitle: "ESPACIO Q · Peluquería y salón de belleza en Chueca, Madrid",
+  seoDescription:
+    "Peluquería y salón de belleza en Chueca, Madrid (Calle de Pelayo 41): corte, color, head spa, estilismo y estética. Reserva tu cita online en ESPACIO Q.",
+};
+
+export const DEFAULT_FAQ_ITEMS = [
+  {
+    question: "¿Dónde está ESPACIO Q y cómo llego en metro?",
+    answer:
+      "Estamos en la Calle de Pelayo, 41, 28004 Madrid, en el barrio de Chueca (Justicia). Las estaciones de metro más cercanas son Chueca (L5), a pocos pasos, y Alonso Martínez (L4, L5, L10).",
+  },
+  {
+    question: "¿Cuál es el horario del salón?",
+    answer:
+      "De martes a viernes abrimos de 10:30 a 21:00 y los sábados de 09:00 a 16:00, en jornada continua. Domingos y lunes, cerrado.",
+  },
+  {
+    question: "¿Cómo puedo reservar cita?",
+    answer:
+      "Puedes reservar online en la página Reservar cita: eliges el servicio, tu profesional (o «Cualquier profesional disponible»), la fecha y una hora libre calculada en tiempo real. Recibirás un correo con el resumen y un enlace seguro para gestionar tu cita. También puedes llamarnos al {{phone}}.",
+  },
+  {
+    question: "¿Puedo cambiar o cancelar mi cita?",
+    answer:
+      "Sí. Desde el enlace de gestión incluido en tu correo de confirmación puedes reprogramar o cancelar tu cita sin coste hasta {{cancellationFreeHours}} horas antes de la hora reservada, sin necesidad de crear una cuenta. Consulta los detalles en nuestras Condiciones de Reserva.",
+  },
+  {
+    question: "¿Dónde puedo aparcar cerca del salón?",
+    answer:
+      "La zona tiene estacionamiento regulado (Zona SER) y forma parte de la Zona de Bajas Emisiones de Madrid, por lo que recomendamos los parkings públicos cercanos, por ejemplo en la Calle Hernán Cortés o en Fuencarral – Santa Bárbara.",
+  },
+  {
+    question: "¿Qué servicios ofrecéis y cuánto cuestan?",
+    answer:
+      "Nuestra carta se organiza en seis capítulos: Corte y Arquitectura Capilar; Color Consciente y Luz Natural; Salud Capilar y Head Spa; Estilismo, Movimiento y Novias; Mirada, Rostro y Bienestar Facial; y Cuidado Consciente de Manos y Pies. En la carta de servicios verás la duración y el precio de cada uno (IVA incluido). Los precios «Desde» o «A consultar» se confirman en el salón tras el diagnóstico y antes de empezar.",
+  },
+];
+
 export const DEFAULT_CMS_PAGES: Array<{
   key: string;
   title: string;
@@ -407,8 +447,8 @@ export const DEFAULT_CMS_PAGES: Array<{
     title: "Inicio · Hero 3D (Perspective Tunnel)",
     category: "SECTION",
     slug: "/",
-    seoTitle: "ESPACIO Q · Salón de Belleza en Madrid",
-    seoDescription: "Un espacio para cuidar de ti en Madrid. Reserva tu cita de estilismo, color y tratamientos de belleza.",
+    seoTitle: HOME_SEO.seoTitle,
+    seoDescription: HOME_SEO.seoDescription,
     data: {
       eyebrow: "ESPACIO Q · MADRID",
       title: "Un espacio para cuidar de ti",
@@ -619,6 +659,22 @@ export const DEFAULT_CMS_PAGES: Array<{
       successTitle: "Consulta recibida correctamente",
       successDescription: "Gracias por escribir a ESPACIO Q. Hemos registrado tu mensaje y te responderemos muy pronto.",
       directions: DEFAULT_CONTACT_DIRECTIONS,
+    },
+  },
+  {
+    key: "page_faq",
+    title: "Página · Preguntas frecuentes (/preguntas-frecuentes)",
+    category: "PAGE",
+    slug: "/preguntas-frecuentes",
+    seoTitle: "Preguntas frecuentes · Peluquería ESPACIO Q en Chueca, Madrid",
+    seoDescription:
+      "Resolvemos tus dudas sobre ESPACIO Q: dónde estamos en Chueca, horario, cómo reservar, cambiar o cancelar tu cita, aparcamiento, servicios y precios.",
+    data: {
+      eyebrow: "PREGUNTAS FRECUENTES",
+      title: "Preguntas frecuentes",
+      description: "Todo lo que conviene saber antes de tu visita a ESPACIO Q, en Chueca (Madrid).",
+      emptyStateMessage: "Estamos preparando las respuestas a las preguntas más habituales. Mientras tanto, escríbenos desde Contacto.",
+      items: DEFAULT_FAQ_ITEMS,
     },
   },
   {

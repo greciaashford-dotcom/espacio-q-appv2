@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useScrollToTopOnChange } from "@/lib/ui/scroll";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -61,6 +62,8 @@ export function BookingManageClient({
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [newTime, setNewTime] = useState("");
   const [cancelReason, setCancelReason] = useState("");
+  const manageRef = useRef<HTMLDivElement>(null);
+  useScrollToTopOnChange(manageRef, `${mode}|${message?.text ?? ""}`);
 
   useEffect(() => {
     if (mode !== "reschedule") return;
@@ -130,7 +133,7 @@ export function BookingManageClient({
   };
 
   return (
-    <div className="space-y-6 rounded-editorial border border-border bg-card p-4 shadow-editorial sm:p-8">
+    <div ref={manageRef} data-testid="booking-manage" className="space-y-6 rounded-editorial border border-border bg-card p-4 shadow-editorial sm:p-8">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4">
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">

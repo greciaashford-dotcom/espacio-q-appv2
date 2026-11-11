@@ -1,5 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
+import { headers } from "next/headers";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
+import { ScrollToTopOnNavigate } from "@/components/scroll-to-top-on-navigate";
+import { SALON_GEO, SHARE_IMAGE, SITE_URL, isIndexableHost } from "@/lib/seo/site";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -27,23 +31,50 @@ export const viewport: Viewport = {
   ],
 };
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.APP_URL || "http://localhost:3000"),
-  title: {
-    default: "ESPACIO Q · Salón de Belleza en Madrid",
-    template: "%s · ESPACIO Q Madrid",
-  },
-  description:
-    "Un espacio para cuidar de ti en Madrid. Salón de belleza contemporáneo con reserva online por servicio y profesional.",
-  openGraph: {
-    type: "website",
-    locale: "es_ES",
-    siteName: "ESPACIO Q",
-    title: "ESPACIO Q · Salón de Belleza en Madrid",
+export async function generateMetadata(): Promise<Metadata> {
+  const h = headers();
+  const indexable = isIndexableHost(h.get("x-forwarded-host") || h.get("host"));
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: "ESPACIO Q · Peluquería y salón de belleza en Chueca, Madrid",
+      template: "%s · ESPACIO Q Madrid",
+    },
     description:
-      "Un espacio para cuidar de ti en Madrid. Estilismo, cuidado capilar y rituales de belleza personalizados.",
-  },
-};
+      "Peluquería y salón de belleza en Chueca, Madrid (Calle de Pelayo 41). Corte, color, head spa, estilismo y estética con reserva online.",
+    applicationName: "ESPACIO Q",
+    robots: indexable ? { index: true, follow: true } : { index: false, follow: false },
+    alternates: { languages: { "es-ES": "/" } },
+    openGraph: {
+      type: "website",
+      locale: "es_ES",
+      siteName: "ESPACIO Q",
+      title: "ESPACIO Q · Peluquería y salón de belleza en Chueca, Madrid",
+      description:
+        "Peluquería y salón de belleza en Chueca, Madrid. Estilismo, cuidado capilar y rituales de belleza personalizados.",
+      images: [SHARE_IMAGE],
+    },
+    twitter: { card: "summary_large_image", images: [SHARE_IMAGE.url] },
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "16x16 32x32 48x48" },
+        { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+        { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      shortcut: "/favicon.ico",
+      apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    },
+    manifest: "/manifest.webmanifest",
+    other: {
+      "geo.region": SALON_GEO.region,
+      "geo.placename": SALON_GEO.placename,
+      "geo.position": `${SALON_GEO.lat};${SALON_GEO.lng}`,
+      ICBM: `${SALON_GEO.lat}, ${SALON_GEO.lng}`,
+    },
+  };
+}
 
 export default function RootLayout({
   children,
@@ -57,6 +88,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-[100dvh] bg-background font-sans text-foreground antialiased selection:bg-primary selection:text-primary-foreground">
+        <Suspense fallback={null}>
+          <ScrollToTopOnNavigate />
+        </Suspense>
         {children}
       </body>
     </html>

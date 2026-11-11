@@ -1,17 +1,18 @@
 import React from "react";
 import type { Metadata } from "next";
+import { withSeo } from "@/lib/seo/site";
 import { getLegalDocument } from "@/lib/domain/cms";
 import { LegalDocumentView } from "@/components/public/legal-document-view";
 
 export async function generateMetadata(): Promise<Metadata> {
   const doc = await getLegalDocument("legal_terminos_condiciones");
-  return {
+  return withSeo({
     title: doc.seoTitle || "Términos y Condiciones Generales · ESPACIO Q Madrid",
     description:
       doc.seoDescription ||
       "Términos y condiciones generales de prestación de servicios y uso de la web de ESPACIO Q.",
     alternates: { canonical: "/terminos-y-condiciones" },
-  };
+  });
 }
 
 export default async function TerminosYCondicionesPage({

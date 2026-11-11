@@ -55,6 +55,8 @@ export async function getPublicShellData() {
     const isOpen = Boolean(row?.isOpen && intervals.length > 0);
     return {
       dayName: DAY_NAMES_ES[dayIdx],
+      dayOfWeek: dayIdx,
+      intervals: isOpen ? intervals : [],
       isOpen,
       hoursText: isOpen
         ? intervals.map((i) => `${i.start}–${i.end}`).join(" y ")

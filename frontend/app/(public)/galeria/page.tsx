@@ -2,6 +2,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { withSeo } from "@/lib/seo/site";
 import { ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { getPublishedCmsBlock } from "@/lib/domain/cms";
@@ -13,11 +14,11 @@ import { Button } from "@/components/ui/button";
 
 export async function generateMetadata(): Promise<Metadata> {
   const block = await getPublishedCmsBlock("page_galeria");
-  return {
+  return withSeo({
     title: block.seoTitle || "Galería · ESPACIO Q Madrid",
     description: block.seoDescription || undefined,
     alternates: { canonical: "/galeria" },
-  };
+  });
 }
 
 export default async function GaleriaPage({

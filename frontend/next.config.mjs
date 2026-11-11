@@ -46,6 +46,12 @@ const nextConfig = {
         ],
       },
       {
+        // Solo el dominio final es indexable; preview y dominios de Emergent: noindex
+        source: "/:path*",
+        missing: [{ type: "host", value: "(www\\.)?espacioq\\.es" }],
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
         source: "/admin/:path*",
         headers: [
           { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },

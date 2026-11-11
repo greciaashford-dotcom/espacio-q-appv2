@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import { withSeo } from "@/lib/seo/site";
 import { Bus, Clock, ExternalLink, Mail, MapPin, Navigation, Phone, SquareParking, TrainFront } from "lucide-react";
 import { getPublishedCmsBlock } from "@/lib/domain/cms";
 import { getPublicShellData } from "@/lib/domain/public-context";
@@ -10,11 +11,11 @@ import { buildDirectionsUrl, buildGoogleEmbedUrl, getSalonLocation, type SalonLo
 
 export async function generateMetadata(): Promise<Metadata> {
   const block = await getPublishedCmsBlock("page_contacto");
-  return {
+  return withSeo({
     title: block.seoTitle || "Contacto · ESPACIO Q Madrid",
     description: block.seoDescription || undefined,
     alternates: { canonical: "/contacto" },
-  };
+  });
 }
 
 export default async function ContactoPage({

@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { withSeo } from "@/lib/seo/site";
 import {
   ArrowRight,
   Calendar,
@@ -27,16 +28,15 @@ import {
 import { FeaturedServicesMenu } from "@/components/public/featured-services-menu";
 import { Button } from "@/components/ui/button";
 import { ensureDefaultServicesCatalog } from "@/lib/domain/cms";
+import { HOME_SEO } from "@/lib/domain/cms-defaults";
 
 export async function generateMetadata(): Promise<Metadata> {
   const heroBlock = await getPublishedCmsBlock("home_hero");
-  return {
-    title: heroBlock.seoTitle || "ESPACIO Q · Salón de Belleza en Madrid",
-    description:
-      heroBlock.seoDescription ||
-      "Un espacio para cuidar de ti en Madrid. Estilismo, cuidado capilar y rituales de belleza personalizados.",
+  return withSeo({
+    title: heroBlock.seoTitle || HOME_SEO.seoTitle,
+    description: heroBlock.seoDescription || HOME_SEO.seoDescription,
     alternates: { canonical: "/" },
-  };
+  });
 }
 
 export default async function HomePage({

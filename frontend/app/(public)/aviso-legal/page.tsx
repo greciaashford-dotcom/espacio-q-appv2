@@ -1,17 +1,18 @@
 import React from "react";
 import type { Metadata } from "next";
+import { withSeo } from "@/lib/seo/site";
 import { getLegalDocument } from "@/lib/domain/cms";
 import { LegalDocumentView } from "@/components/public/legal-document-view";
 
 export async function generateMetadata(): Promise<Metadata> {
   const doc = await getLegalDocument("legal_aviso_legal");
-  return {
+  return withSeo({
     title: doc.seoTitle || "Aviso Legal · ESPACIO Q Madrid",
     description:
       doc.seoDescription ||
       "Aviso Legal e información general de ESPACIO Q en cumplimiento de la LSSI-CE.",
     alternates: { canonical: "/aviso-legal" },
-  };
+  });
 }
 
 export default async function AvisoLegalPage({

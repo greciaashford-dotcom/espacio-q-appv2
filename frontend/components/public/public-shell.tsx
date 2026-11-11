@@ -58,6 +58,8 @@ export type PublicSalonMeta = {
   hasOptionalCookiesEnabled: boolean;
   weeklySummary: Array<{
     dayName: string;
+    dayOfWeek: number;
+    intervals: Array<{ start: string; end: string }>;
     isOpen: boolean;
     hoursText: string;
   }>;
@@ -245,7 +247,7 @@ export function PublicShell({
       </header>
 
       {/* Contenido Principal */}
-      <main id="contenido-principal" className="flex-1">
+      <main id="contenido-principal" tabIndex={-1} className="flex-1 focus:outline-none">
         {children}
       </main>
 
@@ -383,6 +385,11 @@ export function PublicShell({
                       </Link>
                     </li>
                   ))}
+                  <li>
+                    <Link href="/preguntas-frecuentes" data-testid="footer-faq-link" className="hover:text-foreground">
+                      Preguntas frecuentes
+                    </Link>
+                  </li>
                   <li>
                     <Link
                       href="/reservar"

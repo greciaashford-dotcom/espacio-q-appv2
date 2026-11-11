@@ -4,6 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { withSeo } from "@/lib/seo/site";
+import { JsonLd } from "@/components/seo/json-ld";
+import { serviceGraph } from "@/lib/seo/json-ld";
 import { ArrowLeft, Calendar, Check, Clock, UserCheck } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { Button } from "@/components/ui/button";
@@ -35,11 +38,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const svc = await getService(params.slug);
   if (!svc) return { title: "Servicio no disponible" };
-  return {
+  return withSeo({
     title: svc.seoTitle || `${svc.name} · ESPACIO Q Madrid`,
     description: svc.seoDescription || svc.shortDescription,
     alternates: { canonical: `/servicios/${svc.slug}` },
-  };
+  });
 }
 
 export default async function ServiceDetailPage({
@@ -61,11 +64,31 @@ export default async function ServiceDetailPage({
 
   return (
     <div className="py-14 sm:py-20">
+      <JsonLd
+        id="jsonld-service"
+        data={serviceGraph({
+          name: svc.name,
+          slug: svc.slug,
+          description: svc.shortDescription || svc.description,
+          categoryName: svc.category.name,
+          priceType: svc.priceType,
+          priceCents: svc.priceCents,
+          currency: svc.currency,
+        })}
+      />
       <div className="container mx-auto max-w-5xl space-y-10">
         <nav aria-label="Ruta de navegación" className="text-xs text-muted-foreground">
-          <Link href="/servicios" className="inline-flex items-center gap-1 hover:text-foreground">
-            <ArrowLeft className="h-3.5 w-3.5" /> Volver a la carta completa
-          </Link>
+          <ol className="flex flex-wrap items-center gap-1.5">
+            <li><Link href="/" className="hover:text-foreground">Inicio</Link></li>
+            <li aria-hidden="true">/</li>
+            <li>
+              <Link href="/servicios" className="inline-flex items-center gap-1 hover:text-foreground">
+                <ArrowLeft className="h-3.5 w-3.5" /> Servicios
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page" className="text-foreground">{svc.name}</li>
+          </ol>
         </nav>
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">

@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
+import { withSeo } from "@/lib/seo/site";
 import { ArrowRight, UserCheck } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { getPublishedCmsBlock } from "@/lib/domain/cms";
@@ -14,11 +15,11 @@ import { Button } from "@/components/ui/button";
 
 export async function generateMetadata(): Promise<Metadata> {
   const block = await getPublishedCmsBlock("page_equipo");
-  return {
+  return withSeo({
     title: block.seoTitle || "Nuestro Equipo · ESPACIO Q Madrid",
     description: block.seoDescription || undefined,
     alternates: { canonical: "/equipo" },
-  };
+  });
 }
 
 export default async function EquipoPage({

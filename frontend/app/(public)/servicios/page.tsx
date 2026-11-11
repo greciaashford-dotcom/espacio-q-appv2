@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { withSeo } from "@/lib/seo/site";
 import { BookOpen, Clock, Sparkles } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import {
@@ -12,13 +13,13 @@ import { Button } from "@/components/ui/button";
 
 export async function generateMetadata(): Promise<Metadata> {
   const block = await getPublishedCmsBlock("page_servicios");
-  return {
+  return withSeo({
     title: block.seoTitle || "Carta de Servicios y Rituales · ESPACIO Q Madrid",
     description:
       block.seoDescription ||
       "Recorre los 6 capítulos de la carta de servicios, tiempos reales y rituales de belleza consciente en ESPACIO Q Madrid.",
     alternates: { canonical: "/servicios" },
-  };
+  });
 }
 
 export default async function ServiciosPage({
